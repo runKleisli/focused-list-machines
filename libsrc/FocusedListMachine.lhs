@@ -96,7 +96,7 @@ Support
 
 > type Pairing f g = forall a b c. (a -> b -> c) -> g a -> f b -> c
 
-"zapWithAdjunction"
+"zapWithAdjunction" in reverse
 
 > zWA :: (a -> b -> c) -> (x, a) -> (x -> b) -> c
 > zWA fn (x,a) xfnToB = fn a (xfnToB x)
