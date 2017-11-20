@@ -1,0 +1,15 @@
+# Haskell things
+dist
+cabal-dev
+.cabal-sandbox
+*.o
+*.hi
+*.chi
+*.chs.h
+.virthualenv
+*cabal.sandbox.config
+
+# Emacs things
+*~
+\#*
+*\#
