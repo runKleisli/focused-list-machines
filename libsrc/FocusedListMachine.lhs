@@ -94,6 +94,33 @@ Support
 
 > newtype Hdl xs inTy outTy a k = Hdl( Rec (RO inTy outTy a k) xs )
 
+> type Prgm xs inTy outTy a k = Free (Cmd xs inTy outTy a) k
+
+> type Interp xs inTy outTy a k = Cofree (Hdl xs inTy outTy a) k
+
+
+
+> -- | Could be treated as a functor instance for the last-argpair flip
+> -- Then, as if derived instance.
+> iyMap :: (k -> k') -> IY inTY outTy a k l -> IY inTY outTy a k' l
+> iyMap f (IYform (l, r)) = IYform (l, f . r)
+
+or
+< iyMap f (IYform lr) = IYform $ fmap (f.) lr
+
+> -- | Could be treated as a functor instance for the last-argpair flip
+> -- Then, as if derived instance.
+> roMap :: (k -> k') -> RO inTY outTy a k l -> RO inTY outTy a k' l
+> roMap f (ROform fnToO) = ROform $ (fmap . fmap) f fnToO
+
+> instance Functor (Hdl xs inTy outTy a) where
+> 	fmap f (Hdl r) = Hdl (rmap (roMap f) r)
+
+> instance Functor (Cmd xs inTy outTy a) where
+> 	fmap f (Cmd (CoRec iy)) = (Cmd (CoRec (iyMap f iy)))
+
+
+
 > type Pairing f g = forall a b c. (a -> b -> c) -> g a -> f b -> c
 
 "zapWithAdjunction" in reverse
@@ -110,6 +137,18 @@ Support
 
 Hahahahaha that was so easy.
 Credit to (Data.Vinyl.CoRec.match).
+
+
+
+> class CanonicalPairing f g where
+> 	pairCan :: Pairing f g
+
+> instance CanonicalPairing (Cmd xs inTy outTy a) (Hdl xs inTy outTy a)
+> 	where pairCan = pairCH
+
+> pair :: (CanonicalPairing f g) => Pairing (Free f) (Cofree g)
+> pair p (a :< _) (Pure x) = p a x
+> pair p (_ :< gCga) (Free fFfx) = pairCan (pair p) gCga fFfx
 
 -----
 
