@@ -337,6 +337,69 @@ Type families can't be partially applied.
 * Reiterate that expressions are inhabitants of the free monad over the corecord
 * Derive embedding of commands / atomic terms into programs / expressions
 
+-----
+
+Support:
+
+Creates the lifts of atomic commands into expressions/programs.
+
+The proxy here is to keep track of the term name for things that
+eliminate it, which could be the `inTy` and `outTy` functors,
+but generally aren't. It would be easier to call the appropriate
+command by name if singletons were generated for the terms
+and used instead of the proxies, since the generated singletons
+would have the name of the term in them.
+
+In most cases, one wants to use `liftPrgm'` instead of `liftPrgm`,
+because we're typically writing the true input and output type functors
+as type families, which must be wrapped in a newtype so they can be
+partially applied. This requires construction & destruction to be
+configured for before the programs look to have the right type.
+
+> liftPrgm :: (term ∈ termsList)
+> 	=> Proxy term
+> 	-> inTy term a
+> 	-> Free (Cmd termsList inTy outTy a) (outTy term a)
+> liftPrgm _ v = liftF $ Cmd (CoRec (IYform (v, id)))
+
+Applied to a proxy, constructor, and destructor corresponding to wrapped
+input/output types, creates the unwrapped command (see `liftPrgm`).
+
+> liftPrgm' :: (term ∈ termsList)
+> 	=> (i -> inTy' term a)
+> 	-> (outTy' term a -> o)
+> 	-> Proxy term
+> 	-> i
+> 	-> Free (Cmd termsList inTy' outTy' a) o
+> liftPrgm' to from p = fmap from . liftPrgm p . to
+
+I badly want the proxy's type to become its value.
+But it's copy & paste, which will have to be good enough.
+
+-----
+
+
+
+> -- | Equal to `Free (LimaCmdOverSym a) k`
+> type LimaPrgmOverSym a k = Free (Cmd LimaTermsOverSym LimaTermOverSym_InTy' LimaTermOverSym_OutTy' a) k
+
+> -- | Equal to `Free (LimaCmdOverFocus a) k`
+> type LimaPrgmOverFocus a k = Free (Cmd LimaTermsOverFocus LimaTermOverFocus_InTy' LimaTermOverFocus_OutTy' a) k
+
+> -- | Equal to `Free (BFLimaCmd a) k`
+> type BFLimaPrgm a k = Free (Cmd BFLimaTerms BFLimaTerm_InTy' BFLimaTerm_OutTy' a) k
+
+
+
+> liftedBFLimaTerm :: (term ∈ BFLimaTerms)
+> 	=> Proxy term
+> 	-> BFLimaTerm_InTy term a
+> 	-> BFLimaPrgm a (BFLimaTerm_OutTy term a)
+> liftedBFLimaTerm = liftPrgm' BFLimaTerm_InTy' (\(BFLimaTerm_OutTy' x) -> x)
+
+> bflimaInsertSym :: Identity a -> BFLimaPrgm a (Const () a)
+> bflimaInsertSym = liftedBFLimaTerm (Proxy :: Proxy 'BFLimaInsertSym)
+
 
 
 == Pairings between outputs and states ==
