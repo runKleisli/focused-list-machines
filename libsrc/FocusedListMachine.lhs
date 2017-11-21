@@ -258,6 +258,14 @@ Type families can't be partially applied.
 
 
 
+== DSL commands ==
+
+* Everything
+
+-----
+
+
+
 > type LimaCmdOverSym a k
 > 	= Cmd LimaTermsOverSym
 > 		LimaTermOverSym_InTy' LimaTermOverSym_OutTy'
@@ -275,16 +283,29 @@ Type families can't be partially applied.
 
 
 
-== DSL commands ==
-
-* Everything
-
-
-
 == Handlers ==
 
 * Compare ontologies ((commands -> operations) by reaction policies,
 	implementations, cocommands, coatoms)
+
+-----
+
+
+
+> type LimaHdlOverSym a k
+> 	= Hdl LimaTermsOverSym
+> 		LimaTermOverSym_InTy' LimaTermOverSym_OutTy'
+> 		a k
+
+> type LimaHdlOverFocus a k
+> 	= Hdl LimaTermsOverFocus
+> 		LimaTermOverFocus_InTy' LimaTermOverFocus_OutTy'
+> 		a k
+
+> type BFLimaHdl a k
+> 	= Hdl BFLimaTerms
+> 		BFLimaTerm_InTy' BFLimaTerm_OutTy'
+> 		a k
 
 
 
