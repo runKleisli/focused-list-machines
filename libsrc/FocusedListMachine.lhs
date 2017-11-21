@@ -1,7 +1,8 @@
 > {-# LANGUAGE MultiParamTypeClasses, RankNTypes, GADTs, TupleSections
 > , DeriveFunctor, ScopedTypeVariables, DataKinds, KindSignatures, TypeFamilies
 > , PolyKinds, TypeOperators, FlexibleContexts, FlexibleInstances
-> , NoMonomorphismRestriction, TypeSynonymInstances, KindSignatures #-}
+> , NoMonomorphismRestriction, TypeSynonymInstances, KindSignatures
+> , ImpredicativeTypes #-}
 
 > module FocusedListMachine where
 
@@ -152,7 +153,11 @@ Credit to (Data.Vinyl.CoRec.match).
 
 -----
 
+
+
 > data LimaTermOverSym = LimaSetSym | LimaGetSym
+
+> type LimaTermsOverSym = ['LimaSetSym, 'LimaGetSym]
 
 > type family LimaTermOverSym_InTy (t :: LimaTermOverSym) :: * -> * where
 > 	LimaTermOverSym_InTy 'LimaSetSym = Identity
@@ -163,6 +168,7 @@ Credit to (Data.Vinyl.CoRec.match).
 > 	LimaTermOverSym_OutTy 'LimaGetSym = Maybe
 
 We need both pattern matching and partial application.
+Type families can't be partially applied.
 
 > newtype LimaTermOverSym_InTy' f a
 > 	= LimaTermOverSym_InTy' (LimaTermOverSym_InTy f a)
@@ -172,9 +178,99 @@ We need both pattern matching and partial application.
 
 
 
+> data LimaTermOverFocus =
+> 	LimaGetFocusInd
+> 	| LimaRefocusInd
+> 	| LimaTrashFocus
+> 	| LimaRefocusNext
+> 	| LimaRefocusPrev
+> 	| LimaFocusSymCmd LimaTermOverSym
+
+> type LimaTermsOverFocus =
+> 	[ 'LimaGetFocusInd
+> 	, 'LimaRefocusInd
+> 	, 'LimaTrashFocus
+> 	, 'LimaRefocusNext
+> 	, (forall (limaTermOverSym :: LimaTermOverSym).
+> 		'LimaFocusSymCmd limaTermOverSym)]
+
+> type family LimaTermOverFocus_InTy (t :: LimaTermOverFocus) :: * -> * where
+> 	LimaTermOverFocus_InTy 'LimaGetFocusInd = Const ()
+> 	LimaTermOverFocus_InTy 'LimaRefocusInd = Const (Maybe Int)
+> 	LimaTermOverFocus_InTy 'LimaTrashFocus = Const ()
+> 	LimaTermOverFocus_InTy 'LimaRefocusNext = Const ()
+> 	LimaTermOverFocus_InTy 'LimaRefocusPrev = Const ()
+> 	LimaTermOverFocus_InTy ('LimaFocusSymCmd limaTermOverSym)
+> 		= LimaTermOverSym_InTy limaTermOverSym
+
+> type family LimaTermOverFocus_OutTy (t :: LimaTermOverFocus) :: * -> * where
+> 	LimaTermOverFocus_OutTy 'LimaGetFocusInd = Const (Maybe Int)
+> 	LimaTermOverFocus_OutTy 'LimaRefocusInd = Const ()
+> 	LimaTermOverFocus_OutTy 'LimaTrashFocus = Const ()
+> 	LimaTermOverFocus_OutTy 'LimaRefocusNext = Const ()
+> 	LimaTermOverFocus_OutTy 'LimaRefocusPrev = Const ()
+> 	LimaTermOverFocus_OutTy ('LimaFocusSymCmd limaTermOverSym)
+> 		= LimaTermOverSym_OutTy limaTermOverSym
+
+> newtype LimaTermOverFocus_InTy' f a
+> 	= LimaTermOverFocus_InTy' (LimaTermOverFocus_InTy f a)
+
+> newtype LimaTermOverFocus_OutTy' f a
+> 	= LimaTermOverFocus_OutTy' (LimaTermOverFocus_OutTy f a)
+
+
+
+> data BFLimaTerm =
+> 	BFLimaInsertSym
+> 	| BFLimaDeleteSym
+> 	| BFLimaMainFocusCmd LimaTermOverFocus
+> 	| BFLimaPickedFocusCmd LimaTermOverFocus
+
+> type BFLimaTerms =
+> 	[ 'BFLimaInsertSym
+> 	, 'BFLimaDeleteSym
+> 	, (forall (limaTermOverFocus :: LimaTermOverFocus).
+> 		'BFLimaMainFocusCmd limaTermOverFocus)
+> 	, (forall (limaTermOverFocus :: LimaTermOverFocus).
+> 		'BFLimaPickedFocusCmd limaTermOverFocus)]
+
+> type family BFLimaTerm_InTy (t :: BFLimaTerm) :: * -> * where
+> 	BFLimaTerm_InTy 'BFLimaInsertSym = Identity
+> 	BFLimaTerm_InTy 'BFLimaDeleteSym = Const ()
+> 	BFLimaTerm_InTy ('BFLimaMainFocusCmd limaTermOverFocus)
+> 		= LimaTermOverFocus_InTy limaTermOverFocus
+> 	BFLimaTerm_InTy ('BFLimaPickedFocusCmd limaTermOverFocus)
+> 		= LimaTermOverFocus_InTy limaTermOverFocus
+
+> type family BFLimaTerm_OutTy (t :: BFLimaTerm) :: * -> * where
+> 	BFLimaTerm_OutTy 'BFLimaInsertSym = Const ()
+> 	BFLimaTerm_OutTy 'BFLimaDeleteSym = Const ()
+> 	BFLimaTerm_OutTy ('BFLimaMainFocusCmd limaTermOverFocus)
+> 		= LimaTermOverFocus_OutTy limaTermOverFocus
+> 	BFLimaTerm_OutTy ('BFLimaPickedFocusCmd limaTermOverFocus)
+> 		= LimaTermOverFocus_OutTy limaTermOverFocus
+
+> newtype BFLimaTerm_InTy' f a
+> 	= BFLimaTerm_InTy' (BFLimaTerm_InTy f a)
+
+> newtype BFLimaTerm_OutTy' f a
+> 	= BFLimaTerm_OutTy' (BFLimaTerm_OutTy f a)
+
+
+
 > type LimaTermOverSym_Client a k
-> 	= Cmd ['LimaSetSym, 'LimaGetSym]
+> 	= Cmd LimaTermsOverSym
 > 		LimaTermOverSym_InTy' LimaTermOverSym_OutTy'
+> 		a k
+
+> type LimaTermOverFocus_Client a k
+> 	= Cmd LimaTermsOverFocus
+> 		LimaTermOverFocus_InTy' LimaTermOverFocus_OutTy'
+> 		a k
+
+> type BFLimaTerm_Client a k
+> 	= Cmd BFLimaTerms
+> 		BFLimaTerm_InTy' BFLimaTerm_OutTy'
 > 		a k
 
 
