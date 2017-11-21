@@ -258,17 +258,17 @@ Type families can't be partially applied.
 
 
 
-> type LimaTermOverSym_Client a k
+> type LimaCmdOverSym a k
 > 	= Cmd LimaTermsOverSym
 > 		LimaTermOverSym_InTy' LimaTermOverSym_OutTy'
 > 		a k
 
-> type LimaTermOverFocus_Client a k
+> type LimaCmdOverFocus a k
 > 	= Cmd LimaTermsOverFocus
 > 		LimaTermOverFocus_InTy' LimaTermOverFocus_OutTy'
 > 		a k
 
-> type BFLimaTerm_Client a k
+> type BFLimaCmd a k
 > 	= Cmd BFLimaTerms
 > 		BFLimaTerm_InTy' BFLimaTerm_OutTy'
 > 		a k
