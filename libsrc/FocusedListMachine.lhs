@@ -357,7 +357,7 @@ partially applied. This requires construction & destruction to be
 configured for before the programs look to have the right type.
 
 > liftPrgm :: (term ∈ termsList)
-> 	=> Proxy term
+> 	=> proxy term
 > 	-> inTy term a
 > 	-> Free (Cmd termsList inTy outTy a) (outTy term a)
 > liftPrgm _ v = liftF $ Cmd (CoRec (IYform (v, id)))
@@ -368,7 +368,7 @@ input/output types, creates the unwrapped command (see `liftPrgm`).
 > liftPrgm' :: (term ∈ termsList)
 > 	=> (i -> inTy' term a)
 > 	-> (outTy' term a -> o)
-> 	-> Proxy term
+> 	-> proxy term
 > 	-> i
 > 	-> Free (Cmd termsList inTy' outTy' a) o
 > liftPrgm' to from p = fmap from . liftPrgm p . to
@@ -392,13 +392,76 @@ But it's copy & paste, which will have to be good enough.
 
 
 > liftedBFLimaTerm :: (term ∈ BFLimaTerms)
-> 	=> Proxy term
+> 	=> proxy term
 > 	-> BFLimaTerm_InTy term a
 > 	-> BFLimaPrgm a (BFLimaTerm_OutTy term a)
 > liftedBFLimaTerm = liftPrgm' BFLimaTerm_InTy' (\(BFLimaTerm_OutTy' x) -> x)
 
 > bflimaInsertSym :: Identity a -> BFLimaPrgm a (Const () a)
 > bflimaInsertSym = liftedBFLimaTerm (Proxy :: Proxy 'BFLimaInsertSym)
+
+We can't derive these expressions until dependent haskell exists, because
+it constitutes a `(term :: termTy) -> f term`. Generating singletons
+is the closest thing.
+
+Please don't leave your atoms without type signatures, that just means the
+language is undocumented.
+
+> liftAtomString ::
+> 	String {- Input type functor -}
+> 	-> String {- Output type functor -}
+> 	-> String {- Program type name -}
+> 	-> String {- Specialization of liftPrgm' -}
+> 	-> (String, String) {- (Term title, name of its lift) -}
+> 	-> String
+> liftAtomString inTFName outTFName prgmTyName specialLiftName (termName, liftName)
+> 	= unlines $
+> 		[ liftName ++ " :: " ++ inTFName ++ " '" ++ termName ++ " a -> " ++ prgmTyName ++ " a (" ++ outTFName ++ " '" ++ termName ++" a)"
+> 		, liftName ++ " = " ++ specialLiftName ++ " (Proxy :: Proxy '" ++ termName ++ ")" ]
+
+> liftAtomStringBFLima :: (String, String) {- (Term title, name of its lift) -} -> IO ()
+> liftAtomStringBFLima = putStrLn . liftAtomString "BFLimaTerm_InTy" "BFLimaTerm_OutTy" "BFLimaPrgm" "liftedBFLimaTerm"
+
+> liftAtomStringBFLima' :: String -> IO ()
+> liftAtomStringBFLima' (_:_:_:xs) = liftAtomStringBFLima ("BFL"++xs, "bfl"++xs)
+> liftAtomStringBFLima' _ = error "String not long enough to be a term name."
+
+> liftedAtomStringsBFLima :: IO ()
+> liftedAtomStringsBFLima = mapM_ liftAtomStringBFLima'
+> 	$ ["BFLimaInsertSym", "BFLimaDeleteSym",
+> 	"BFLimaMainFocusCmd", -- ignore this one
+> 	"BFLimaPickedFocusCmd"] -- ignore this one
+
+> bflimaDeleteSym :: BFLimaTerm_InTy 'BFLimaDeleteSym a
+> 	-> BFLimaPrgm a (BFLimaTerm_OutTy 'BFLimaDeleteSym a)
+> bflimaDeleteSym = liftedBFLimaTerm (Proxy :: Proxy 'BFLimaDeleteSym)
+
+Oh whoops! We can't make these parametricly, haha!
+
+When you try & use (:: x) to type something based on a variable (x), it
+actually treats them as different variables!
+In this case, it quite luckily gives us an ambiguous types error.
+
+< bflimaMainFocusCmd limaTermOverFocus = liftedBFLimaTerm (Proxy :: Proxy ('BFLimaMainFocusCmd limaTermOverFocus))
+
+< bflimaPickedFocusCmd limaTermOverFocus = liftedBFLimaTerm (Proxy :: Proxy ('BFLimaPickedFocusCmd limaTermOverFocus))
+
+Okay. But.. now we're stuck, cause we can't use `hoistFree` on a constructor
+to take lifts of recursive sublanguage commands into their free monad and
+transform them into the corresponding programs over the parent language.
+
+There is in fact no transformation from commands in the recursive sublanguage
+to commands in the parent language, without such a constructor, because
+such a transformation would need to be able to compare the values of
+the co/sheaf on the preimage and image of the section and verify that
+they are in fact equal. The only thing identifying the terms is the
+section. Comparing the values of the functor defining what a command is
+implies comparing the unpromoted form of sublanguage terms (arguments
+to parent language terms) to the promoted form (arguments to the functor,
+as elements of the type-level list of all promoted terms).
+
+Thus there is nothing to `hoistFree` over recursive sublanguage programs
+to convert them to programs in the parent language.
 
 
 
