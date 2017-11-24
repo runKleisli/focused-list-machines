@@ -155,106 +155,106 @@ Credit to (Data.Vinyl.CoRec.match).
 
 
 
-> data LimaTermOverSym = LimaSetSym | LimaGetSym
+> data LimaSymTerm = LimaSetSym | LimaGetSym
 
-> type LimaTermsOverSym = ['LimaSetSym, 'LimaGetSym]
+> type LimaSymTerms = ['LimaSetSym, 'LimaGetSym]
 
-> type family LimaTermOverSym_InTy (t :: LimaTermOverSym) :: * -> * where
-> 	LimaTermOverSym_InTy 'LimaSetSym = Identity
-> 	LimaTermOverSym_InTy 'LimaGetSym = Const ()
+> type family LimaSym_InTy (t :: LimaSymTerm) :: * -> * where
+> 	LimaSym_InTy 'LimaSetSym = Identity
+> 	LimaSym_InTy 'LimaGetSym = Const ()
 
-> type family LimaTermOverSym_OutTy (t :: LimaTermOverSym) :: * -> * where
-> 	LimaTermOverSym_OutTy 'LimaSetSym = Const ()
-> 	LimaTermOverSym_OutTy 'LimaGetSym = Maybe
+> type family LimaSym_OutTy (t :: LimaSymTerm) :: * -> * where
+> 	LimaSym_OutTy 'LimaSetSym = Const ()
+> 	LimaSym_OutTy 'LimaGetSym = Maybe
 
 We need both pattern matching and partial application.
 Type families can't be partially applied.
 
-> newtype LimaTermOverSym_InTy' f a
-> 	= LimaTermOverSym_InTy' (LimaTermOverSym_InTy f a)
+> newtype LimaSym_InTy' f a
+> 	= LimaSym_InTy' (LimaSym_InTy f a)
 
-> newtype LimaTermOverSym_OutTy' f a
-> 	= LimaTermOverSym_OutTy' (LimaTermOverSym_OutTy f a)
+> newtype LimaSym_OutTy' f a
+> 	= LimaSym_OutTy' (LimaSym_OutTy f a)
 
 
 
-> data LimaTermOverFocus =
+> data LimaFocusTerm =
 > 	LimaGetFocusInd
 > 	| LimaRefocusInd
 > 	| LimaTrashFocus
 > 	| LimaRefocusNext
 > 	| LimaRefocusPrev
-> 	| LimaFocusSymCmd LimaTermOverSym
+> 	| LimaFocusSymCmd LimaSymTerm
 
-> type LimaTermsOverFocus =
+> type LimaFocusTerms =
 > 	[ 'LimaGetFocusInd
 > 	, 'LimaRefocusInd
 > 	, 'LimaTrashFocus
 > 	, 'LimaRefocusNext
-> 	, (forall (limaTermOverSym :: LimaTermOverSym).
-> 		'LimaFocusSymCmd limaTermOverSym)]
+> 	, (forall (limaSymTerm :: LimaSymTerm).
+> 		'LimaFocusSymCmd limaSymTerm)]
 
-> type family LimaTermOverFocus_InTy (t :: LimaTermOverFocus) :: * -> * where
-> 	LimaTermOverFocus_InTy 'LimaGetFocusInd = Const ()
-> 	LimaTermOverFocus_InTy 'LimaRefocusInd = Const (Maybe Int)
-> 	LimaTermOverFocus_InTy 'LimaTrashFocus = Const ()
-> 	LimaTermOverFocus_InTy 'LimaRefocusNext = Const ()
-> 	LimaTermOverFocus_InTy 'LimaRefocusPrev = Const ()
-> 	LimaTermOverFocus_InTy ('LimaFocusSymCmd limaTermOverSym)
-> 		= LimaTermOverSym_InTy limaTermOverSym
+> type family LimaFocus_InTy (t :: LimaFocusTerm) :: * -> * where
+> 	LimaFocus_InTy 'LimaGetFocusInd = Const ()
+> 	LimaFocus_InTy 'LimaRefocusInd = Const (Maybe Int)
+> 	LimaFocus_InTy 'LimaTrashFocus = Const ()
+> 	LimaFocus_InTy 'LimaRefocusNext = Const ()
+> 	LimaFocus_InTy 'LimaRefocusPrev = Const ()
+> 	LimaFocus_InTy ('LimaFocusSymCmd limaSymTerm)
+> 		= LimaSym_InTy limaSymTerm
 
-> type family LimaTermOverFocus_OutTy (t :: LimaTermOverFocus) :: * -> * where
-> 	LimaTermOverFocus_OutTy 'LimaGetFocusInd = Const (Maybe Int)
-> 	LimaTermOverFocus_OutTy 'LimaRefocusInd = Const ()
-> 	LimaTermOverFocus_OutTy 'LimaTrashFocus = Const ()
-> 	LimaTermOverFocus_OutTy 'LimaRefocusNext = Const ()
-> 	LimaTermOverFocus_OutTy 'LimaRefocusPrev = Const ()
-> 	LimaTermOverFocus_OutTy ('LimaFocusSymCmd limaTermOverSym)
-> 		= LimaTermOverSym_OutTy limaTermOverSym
+> type family LimaFocus_OutTy (t :: LimaFocusTerm) :: * -> * where
+> 	LimaFocus_OutTy 'LimaGetFocusInd = Const (Maybe Int)
+> 	LimaFocus_OutTy 'LimaRefocusInd = Const ()
+> 	LimaFocus_OutTy 'LimaTrashFocus = Const ()
+> 	LimaFocus_OutTy 'LimaRefocusNext = Const ()
+> 	LimaFocus_OutTy 'LimaRefocusPrev = Const ()
+> 	LimaFocus_OutTy ('LimaFocusSymCmd limaSymTerm)
+> 		= LimaSym_OutTy limaSymTerm
 
-> newtype LimaTermOverFocus_InTy' f a
-> 	= LimaTermOverFocus_InTy' (LimaTermOverFocus_InTy f a)
+> newtype LimaFocus_InTy' f a
+> 	= LimaFocus_InTy' (LimaFocus_InTy f a)
 
-> newtype LimaTermOverFocus_OutTy' f a
-> 	= LimaTermOverFocus_OutTy' (LimaTermOverFocus_OutTy f a)
+> newtype LimaFocus_OutTy' f a
+> 	= LimaFocus_OutTy' (LimaFocus_OutTy f a)
 
 
 
 > data BFLimaTerm =
 > 	BFLimaInsertSym
 > 	| BFLimaDeleteSym
-> 	| BFLimaMainFocusCmd LimaTermOverFocus
-> 	| BFLimaPickedFocusCmd LimaTermOverFocus
+> 	| BFLimaMainFocusCmd LimaFocusTerm
+> 	| BFLimaPickedFocusCmd LimaFocusTerm
 
 > type BFLimaTerms =
 > 	[ 'BFLimaInsertSym
 > 	, 'BFLimaDeleteSym
-> 	, (forall (limaTermOverFocus :: LimaTermOverFocus).
-> 		'BFLimaMainFocusCmd limaTermOverFocus)
-> 	, (forall (limaTermOverFocus :: LimaTermOverFocus).
-> 		'BFLimaPickedFocusCmd limaTermOverFocus)]
+> 	, (forall (limaFocusTerm :: LimaFocusTerm).
+> 		'BFLimaMainFocusCmd limaFocusTerm)
+> 	, (forall (limaFocusTerm :: LimaFocusTerm).
+> 		'BFLimaPickedFocusCmd limaFocusTerm)]
 
-> type family BFLimaTerm_InTy (t :: BFLimaTerm) :: * -> * where
-> 	BFLimaTerm_InTy 'BFLimaInsertSym = Identity
-> 	BFLimaTerm_InTy 'BFLimaDeleteSym = Const ()
-> 	BFLimaTerm_InTy ('BFLimaMainFocusCmd limaTermOverFocus)
-> 		= LimaTermOverFocus_InTy limaTermOverFocus
-> 	BFLimaTerm_InTy ('BFLimaPickedFocusCmd limaTermOverFocus)
-> 		= LimaTermOverFocus_InTy limaTermOverFocus
+> type family BFLima_InTy (t :: BFLimaTerm) :: * -> * where
+> 	BFLima_InTy 'BFLimaInsertSym = Identity
+> 	BFLima_InTy 'BFLimaDeleteSym = Const ()
+> 	BFLima_InTy ('BFLimaMainFocusCmd limaFocusTerm)
+> 		= LimaFocus_InTy limaFocusTerm
+> 	BFLima_InTy ('BFLimaPickedFocusCmd limaFocusTerm)
+> 		= LimaFocus_InTy limaFocusTerm
 
-> type family BFLimaTerm_OutTy (t :: BFLimaTerm) :: * -> * where
-> 	BFLimaTerm_OutTy 'BFLimaInsertSym = Const ()
-> 	BFLimaTerm_OutTy 'BFLimaDeleteSym = Const ()
-> 	BFLimaTerm_OutTy ('BFLimaMainFocusCmd limaTermOverFocus)
-> 		= LimaTermOverFocus_OutTy limaTermOverFocus
-> 	BFLimaTerm_OutTy ('BFLimaPickedFocusCmd limaTermOverFocus)
-> 		= LimaTermOverFocus_OutTy limaTermOverFocus
+> type family BFLima_OutTy (t :: BFLimaTerm) :: * -> * where
+> 	BFLima_OutTy 'BFLimaInsertSym = Const ()
+> 	BFLima_OutTy 'BFLimaDeleteSym = Const ()
+> 	BFLima_OutTy ('BFLimaMainFocusCmd limaFocusTerm)
+> 		= LimaFocus_OutTy limaFocusTerm
+> 	BFLima_OutTy ('BFLimaPickedFocusCmd limaFocusTerm)
+> 		= LimaFocus_OutTy limaFocusTerm
 
-> newtype BFLimaTerm_InTy' f a
-> 	= BFLimaTerm_InTy' (BFLimaTerm_InTy f a)
+> newtype BFLima_InTy' f a
+> 	= BFLima_InTy' (BFLima_InTy f a)
 
-> newtype BFLimaTerm_OutTy' f a
-> 	= BFLimaTerm_OutTy' (BFLimaTerm_OutTy f a)
+> newtype BFLima_OutTy' f a
+> 	= BFLima_OutTy' (BFLima_OutTy f a)
 
 
 
@@ -266,19 +266,19 @@ Type families can't be partially applied.
 
 
 
-> type LimaCmdOverSym a k
-> 	= Cmd LimaTermsOverSym
-> 		LimaTermOverSym_InTy' LimaTermOverSym_OutTy'
+> type LimaSymCmd a k
+> 	= Cmd LimaSymTerms
+> 		LimaSym_InTy' LimaSym_OutTy'
 > 		a k
 
-> type LimaCmdOverFocus a k
-> 	= Cmd LimaTermsOverFocus
-> 		LimaTermOverFocus_InTy' LimaTermOverFocus_OutTy'
+> type LimaFocusCmd a k
+> 	= Cmd LimaFocusTerms
+> 		LimaFocus_InTy' LimaFocus_OutTy'
 > 		a k
 
 > type BFLimaCmd a k
 > 	= Cmd BFLimaTerms
-> 		BFLimaTerm_InTy' BFLimaTerm_OutTy'
+> 		BFLima_InTy' BFLima_OutTy'
 > 		a k
 
 
@@ -292,20 +292,11 @@ Type families can't be partially applied.
 
 
 
-> type LimaHdlOverSym a k
-> 	= Hdl LimaTermsOverSym
-> 		LimaTermOverSym_InTy' LimaTermOverSym_OutTy'
-> 		a k
+> type LimaSymHdl a k = Hdl LimaSymTerms LimaSym_InTy' LimaSym_OutTy' a k
 
-> type LimaHdlOverFocus a k
-> 	= Hdl LimaTermsOverFocus
-> 		LimaTermOverFocus_InTy' LimaTermOverFocus_OutTy'
-> 		a k
+> type LimaFocusHdl a k = Hdl LimaFocusTerms LimaFocus_InTy' LimaFocus_OutTy' a k
 
-> type BFLimaHdl a k
-> 	= Hdl BFLimaTerms
-> 		BFLimaTerm_InTy' BFLimaTerm_OutTy'
-> 		a k
+> type BFLimaHdl a k = Hdl BFLimaTerms BFLima_InTy' BFLima_OutTy' a k
 
 
 
@@ -380,22 +371,22 @@ But it's copy & paste, which will have to be good enough.
 
 
 
-> -- | Equal to `Free (LimaCmdOverSym a) k`
-> type LimaPrgmOverSym a k = Free (Cmd LimaTermsOverSym LimaTermOverSym_InTy' LimaTermOverSym_OutTy' a) k
+> -- | Equal to `Free (LimaSymCmd a) k`
+> type LimaSymPrgm a k = Free (Cmd LimaSymTerms LimaSym_InTy' LimaSym_OutTy' a) k
 
-> -- | Equal to `Free (LimaCmdOverFocus a) k`
-> type LimaPrgmOverFocus a k = Free (Cmd LimaTermsOverFocus LimaTermOverFocus_InTy' LimaTermOverFocus_OutTy' a) k
+> -- | Equal to `Free (LimaFocusCmd a) k`
+> type LimaFocusPrgm a k = Free (Cmd LimaFocusTerms LimaFocus_InTy' LimaFocus_OutTy' a) k
 
 > -- | Equal to `Free (BFLimaCmd a) k`
-> type BFLimaPrgm a k = Free (Cmd BFLimaTerms BFLimaTerm_InTy' BFLimaTerm_OutTy' a) k
+> type BFLimaPrgm a k = Free (Cmd BFLimaTerms BFLima_InTy' BFLima_OutTy' a) k
 
 
 
 > liftedBFLimaTerm :: (term ∈ BFLimaTerms)
 > 	=> proxy term
-> 	-> BFLimaTerm_InTy term a
-> 	-> BFLimaPrgm a (BFLimaTerm_OutTy term a)
-> liftedBFLimaTerm = liftPrgm' BFLimaTerm_InTy' (\(BFLimaTerm_OutTy' x) -> x)
+> 	-> BFLima_InTy term a
+> 	-> BFLimaPrgm a (BFLima_OutTy term a)
+> liftedBFLimaTerm = liftPrgm' BFLima_InTy' (\(BFLima_OutTy' x) -> x)
 
 > bflimaInsertSym :: Identity a -> BFLimaPrgm a (Const () a)
 > bflimaInsertSym = liftedBFLimaTerm (Proxy :: Proxy 'BFLimaInsertSym)
@@ -420,7 +411,7 @@ language is undocumented.
 > 		, liftName ++ " = " ++ specialLiftName ++ " (Proxy :: Proxy '" ++ termName ++ ")" ]
 
 > liftAtomStringBFLima :: (String, String) {- (Term title, name of its lift) -} -> IO ()
-> liftAtomStringBFLima = putStrLn . liftAtomString "BFLimaTerm_InTy" "BFLimaTerm_OutTy" "BFLimaPrgm" "liftedBFLimaTerm"
+> liftAtomStringBFLima = putStrLn . liftAtomString "BFLima_InTy" "BFLima_OutTy" "BFLimaPrgm" "liftedBFLimaTerm"
 
 > liftAtomStringBFLima' :: String -> IO ()
 > liftAtomStringBFLima' (_:_:_:xs) = liftAtomStringBFLima ("BFL"++xs, "bfl"++xs)
@@ -432,8 +423,8 @@ language is undocumented.
 > 	"BFLimaMainFocusCmd", -- ignore this one
 > 	"BFLimaPickedFocusCmd"] -- ignore this one
 
-> bflimaDeleteSym :: BFLimaTerm_InTy 'BFLimaDeleteSym a
-> 	-> BFLimaPrgm a (BFLimaTerm_OutTy 'BFLimaDeleteSym a)
+> bflimaDeleteSym :: BFLima_InTy 'BFLimaDeleteSym a
+> 	-> BFLimaPrgm a (BFLima_OutTy 'BFLimaDeleteSym a)
 > bflimaDeleteSym = liftedBFLimaTerm (Proxy :: Proxy 'BFLimaDeleteSym)
 
 Oh whoops! We can't make these parametricly, haha!
@@ -442,9 +433,9 @@ When you try & use (:: x) to type something based on a variable (x), it
 actually treats them as different variables!
 In this case, it quite luckily gives us an ambiguous types error.
 
-< bflimaMainFocusCmd limaTermOverFocus = liftedBFLimaTerm (Proxy :: Proxy ('BFLimaMainFocusCmd limaTermOverFocus))
+< bflimaMainFocusCmd limaFocusTerm = liftedBFLimaTerm (Proxy :: Proxy ('BFLimaMainFocusCmd limaFocusTerm))
 
-< bflimaPickedFocusCmd limaTermOverFocus = liftedBFLimaTerm (Proxy :: Proxy ('BFLimaPickedFocusCmd limaTermOverFocus))
+< bflimaPickedFocusCmd limaFocusTerm = liftedBFLimaTerm (Proxy :: Proxy ('BFLimaPickedFocusCmd limaFocusTerm))
 
 Okay. But.. now we're stuck, cause we can't use `hoistFree` on a constructor
 to take lifts of recursive sublanguage commands into their free monad and
