@@ -155,6 +155,17 @@ Credit to (Data.Vinyl.CoRec.match).
 
 
 
+About newtypes below:
+* We need both pattern matching and partial application.
+Type families can't be partially applied.
+* Shape of recursive sublanguages' command and handler functor newtypes:
+** Squashes the newtypes for nonrecursive sublanguage input & output functor
+newtypes into the constructions of `IY` & `RO` & how they reorder the arguments
+so that the language term is last, & they can be a functor over language terms,
+so they can form co/records over the term category.
+
+
+
 > data LimaSymTerm = LimaSetSym | LimaGetSym
 
 > type LimaSymTerms = ['LimaSetSym, 'LimaGetSym]
@@ -167,9 +178,6 @@ Credit to (Data.Vinyl.CoRec.match).
 > 	LimaSym_OutTy 'LimaSetSym = Const ()
 > 	LimaSym_OutTy 'LimaGetSym = Maybe
 
-We need both pattern matching and partial application.
-Type families can't be partially applied.
-
 > newtype LimaSym_InTy' f a
 > 	= LimaSym_InTy' (LimaSym_InTy f a)
 
@@ -178,83 +186,118 @@ Type families can't be partially applied.
 
 
 
-> data LimaFocusTerm =
+> data LimaIndTerm =
 > 	LimaGetFocusInd
 > 	| LimaRefocusInd
 > 	| LimaTrashFocus
 > 	| LimaRefocusNext
 > 	| LimaRefocusPrev
-> 	| LimaFocusSymCmd LimaSymTerm
 
-> type LimaFocusTerms =
+> type LimaIndTerms =
 > 	[ 'LimaGetFocusInd
 > 	, 'LimaRefocusInd
 > 	, 'LimaTrashFocus
-> 	, 'LimaRefocusNext
-> 	, (forall (limaSymTerm :: LimaSymTerm).
-> 		'LimaFocusSymCmd limaSymTerm)]
+> 	, 'LimaRefocusNext ]
 
-> type family LimaFocus_InTy (t :: LimaFocusTerm) :: * -> * where
-> 	LimaFocus_InTy 'LimaGetFocusInd = Const ()
-> 	LimaFocus_InTy 'LimaRefocusInd = Const (Maybe Int)
-> 	LimaFocus_InTy 'LimaTrashFocus = Const ()
-> 	LimaFocus_InTy 'LimaRefocusNext = Const ()
-> 	LimaFocus_InTy 'LimaRefocusPrev = Const ()
-> 	LimaFocus_InTy ('LimaFocusSymCmd limaSymTerm)
-> 		= LimaSym_InTy limaSymTerm
+> type family LimaInd_InTy (t :: LimaIndTerm) :: * -> * where
+> 	LimaInd_InTy 'LimaGetFocusInd = Const ()
+> 	LimaInd_InTy 'LimaRefocusInd = Const (Maybe Int)
+> 	LimaInd_InTy 'LimaTrashFocus = Const ()
+> 	LimaInd_InTy 'LimaRefocusNext = Const ()
+> 	LimaInd_InTy 'LimaRefocusPrev = Const ()
 
-> type family LimaFocus_OutTy (t :: LimaFocusTerm) :: * -> * where
-> 	LimaFocus_OutTy 'LimaGetFocusInd = Const (Maybe Int)
-> 	LimaFocus_OutTy 'LimaRefocusInd = Const ()
-> 	LimaFocus_OutTy 'LimaTrashFocus = Const ()
-> 	LimaFocus_OutTy 'LimaRefocusNext = Const ()
-> 	LimaFocus_OutTy 'LimaRefocusPrev = Const ()
-> 	LimaFocus_OutTy ('LimaFocusSymCmd limaSymTerm)
-> 		= LimaSym_OutTy limaSymTerm
+> type family LimaInd_OutTy (t :: LimaIndTerm) :: * -> * where
+> 	LimaInd_OutTy 'LimaGetFocusInd = Const (Maybe Int)
+> 	LimaInd_OutTy 'LimaRefocusInd = Const ()
+> 	LimaInd_OutTy 'LimaTrashFocus = Const ()
+> 	LimaInd_OutTy 'LimaRefocusNext = Const ()
+> 	LimaInd_OutTy 'LimaRefocusPrev = Const ()
 
-> newtype LimaFocus_InTy' f a
-> 	= LimaFocus_InTy' (LimaFocus_InTy f a)
+> newtype LimaInd_InTy' f a
+> 	= LimaInd_InTy' (LimaInd_InTy f a)
 
-> newtype LimaFocus_OutTy' f a
-> 	= LimaFocus_OutTy' (LimaFocus_OutTy f a)
+> newtype LimaInd_OutTy' f a
+> 	= LimaInd_OutTy' (LimaInd_OutTy f a)
+
+
+
+> data LimaFocusTerm =
+> 	LimaFocusIndTerm
+> 	| LimaFocusSymTerm
+
+Approximately
+< 	LimaFocusIndCmd LimaIndTerm
+< 	LimaFocusSymCmd LimaSymTerm
+
+> type LimaFocusTerms =
+> 	[ 'LimaFocusIndTerm
+> 	, 'LimaFocusSymTerm ]
+
+> type family LimaFocus_CmdTy (t :: LimaFocusTerm) :: * -> * -> * where
+> 	LimaFocus_CmdTy 'LimaFocusIndTerm = LimaIndCmd
+> 	LimaFocus_CmdTy 'LimaFocusSymTerm = LimaSymCmd
+
+> type family LimaFocus_HdlTy (t :: LimaFocusTerm) :: * -> * -> * where
+> 	LimaFocus_HdlTy 'LimaFocusIndTerm = LimaIndHdl
+> 	LimaFocus_HdlTy 'LimaFocusSymTerm = LimaSymHdl
+
+> newtype LimaFocus_CmdTy' a k f
+> 	= LimaFocus_CmdTy' (LimaFocus_CmdTy f a k)
+
+> newtype LimaFocus_HdlTy' a k f
+> 	= LimaFocus_HdlTy' (LimaFocus_HdlTy f a k)
+
+
+
+> data BFLimaListTerm =
+> 	BFLimaInsertSym
+> 	| BFLimaDeleteSym
+
+> type BFLimaListTerms =
+> 	[ 'BFLimaInsertSym
+> 	, 'BFLimaDeleteSym ]
+
+> type family BFLimaList_InTy (t :: BFLimaListTerm) :: * -> * where
+> 	BFLimaList_InTy 'BFLimaInsertSym = Identity
+> 	BFLimaList_InTy 'BFLimaDeleteSym = Const ()
+
+> type family BFLimaList_OutTy (t :: BFLimaListTerm) :: * -> * where
+> 	BFLimaList_OutTy 'BFLimaInsertSym = Const ()
+> 	BFLimaList_OutTy 'BFLimaDeleteSym = Const ()
+
+> newtype BFLimaList_InTy' f a
+> 	= BFLimaList_InTy' (BFLimaList_InTy f a)
+
+> newtype BFLimaList_OutTy' f a
+> 	= BFLimaList_OutTy' (BFLimaList_OutTy f a)
 
 
 
 > data BFLimaTerm =
-> 	BFLimaInsertSym
-> 	| BFLimaDeleteSym
-> 	| BFLimaMainFocusCmd LimaFocusTerm
-> 	| BFLimaPickedFocusCmd LimaFocusTerm
+> 	BFLimaListPartTerm
+> 	| BFLimaMainFocusTerm
+> 	| BFLimaPickedFocusTerm
 
 > type BFLimaTerms =
-> 	[ 'BFLimaInsertSym
-> 	, 'BFLimaDeleteSym
-> 	, (forall (limaFocusTerm :: LimaFocusTerm).
-> 		'BFLimaMainFocusCmd limaFocusTerm)
-> 	, (forall (limaFocusTerm :: LimaFocusTerm).
-> 		'BFLimaPickedFocusCmd limaFocusTerm)]
+> 	[ 'BFLimaListPartTerm
+> 	, 'BFLimaMainFocusTerm
+> 	, 'BFLimaPickedFocusTerm ]
 
-> type family BFLima_InTy (t :: BFLimaTerm) :: * -> * where
-> 	BFLima_InTy 'BFLimaInsertSym = Identity
-> 	BFLima_InTy 'BFLimaDeleteSym = Const ()
-> 	BFLima_InTy ('BFLimaMainFocusCmd limaFocusTerm)
-> 		= LimaFocus_InTy limaFocusTerm
-> 	BFLima_InTy ('BFLimaPickedFocusCmd limaFocusTerm)
-> 		= LimaFocus_InTy limaFocusTerm
+> type family BFLima_CmdTy (t :: BFLimaTerm) :: * -> * -> * where
+> 	BFLima_CmdTy 'BFLimaListPartTerm = BFLimaListCmd
+> 	BFLima_CmdTy 'BFLimaMainFocusTerm = LimaFocusCmd
+> 	BFLima_CmdTy 'BFLimaPickedFocusTerm = LimaFocusCmd
 
-> type family BFLima_OutTy (t :: BFLimaTerm) :: * -> * where
-> 	BFLima_OutTy 'BFLimaInsertSym = Const ()
-> 	BFLima_OutTy 'BFLimaDeleteSym = Const ()
-> 	BFLima_OutTy ('BFLimaMainFocusCmd limaFocusTerm)
-> 		= LimaFocus_OutTy limaFocusTerm
-> 	BFLima_OutTy ('BFLimaPickedFocusCmd limaFocusTerm)
-> 		= LimaFocus_OutTy limaFocusTerm
+> type family BFLima_HdlTy (t :: BFLimaTerm) :: * -> * -> * where
+> 	BFLima_HdlTy 'BFLimaListPartTerm = BFLimaListHdl
+> 	BFLima_HdlTy 'BFLimaMainFocusTerm = LimaFocusHdl
+> 	BFLima_HdlTy 'BFLimaPickedFocusTerm = LimaFocusHdl
 
-> newtype BFLima_InTy' f a
-> 	= BFLima_InTy' (BFLima_InTy f a)
+> newtype BFLima_CmdTy' a k f
+> 	= BFLima_CmdTy' (BFLima_CmdTy f a k)
 
-> newtype BFLima_OutTy' f a
-> 	= BFLima_OutTy' (BFLima_OutTy f a)
+> newtype BFLima_HdlTy' a k f
+> 	= BFLima_HdlTy' (BFLima_HdlTy f a k)
 
 
 
@@ -266,20 +309,168 @@ Type families can't be partially applied.
 
 
 
-> type LimaSymCmd a k
-> 	= Cmd LimaSymTerms
-> 		LimaSym_InTy' LimaSym_OutTy'
-> 		a k
+About the below newtypes:
+* For languages with recursive sublanguages:
+** Shape is the newtype wrapper of `Cmd`, which alters argument order,
+squashed in with the establishing of shorthand notation that siblings'
+type synonyms perform.
+* For the languages without recursive sublanguages:
+** Newtype involved since otherwise there's multiple copies of (`Cmd` [exact args])
+appearing in other places, leading to error propogation.
 
-> type LimaFocusCmd a k
-> 	= Cmd LimaFocusTerms
-> 		LimaFocus_InTy' LimaFocus_OutTy'
-> 		a k
+> newtype LimaSymCmd a k
+> 	= LimaSymCmd (Cmd LimaSymTerms LimaSym_InTy' LimaSym_OutTy' a k)
+> 	deriving (Functor)
 
-> type BFLimaCmd a k
-> 	= Cmd BFLimaTerms
-> 		BFLima_InTy' BFLima_OutTy'
-> 		a k
+> newtype LimaIndCmd a k
+> 	= LimaIndCmd (Cmd LimaIndTerms LimaInd_InTy' LimaInd_OutTy' a k)
+> 	deriving (Functor)
+
+> newtype LimaFocusCmd a k
+> 	= LimaFocusCmd ( CoRec (LimaFocus_CmdTy' a k) LimaFocusTerms )
+
+
+
+More about (CmdTy)s not being injective later...
+
+< instance Functor (LimaFocusCmd a) where
+< 	fmap f (LimaFocusCmd (CoRec (LimaFocus_CmdTy' x)))
+< 		= LimaFocusCmd (CoRec (LimaFocus_CmdTy' (fmap f x)))
+
+This almost works:
+
+< instance Functor (LimaFocusCmd a) where
+< 	fmap f (LimaFocusCmd x) = LimaFocusCmd (coRecMap (LimaFocus_CmdTy' . fmap f . (\(LimaFocus_CmdTy' y) -> y)) x)
+
+... but it boils the missing piece down to inference of (Functor) for
+`LimaFocus_CmdTy term a` for all `term :: LimaFocusTerm`.
+Ultimately, we need a separate function for performing an `fmap`-like
+`LimaFocus_CmdTy' _ _ _ -> LimaFocus_CmdTy' _ _ _` for the same reason
+we need `iyMap` & `roMap` -- the last argument of the `LimaFocus_CmdTy'`
+predicate is the term instead of the type being mapped over.
+
+< limaFocusCmdTyMap ::
+< 	( k -> k' )
+< 	-> LimaFocus_CmdTy' a k l
+< 	-> LimaFocus_CmdTy' a k' l
+
+< limaFocusCmdTyMap f (LimaFocus_CmdTy' (x :: LimaIndCmd a k))
+< 	= LimaFocus_CmdTy' $ fmap f x
+
+Stuck term:
+
+< limaFocusCmdTyMap f
+< 	(LimaFocus_CmdTy' (x :: LimaFocus_CmdTy 'LimaFocusIndTerm a k))
+< 	= LimaFocus_CmdTy' $ fmap f x
+
+```
+    • Couldn't match type ‘LimaFocus_CmdTy l’ with ‘LimaIndCmd’
+      Expected type: LimaFocus_CmdTy l a k
+        Actual type: LimaFocus_CmdTy 'LimaFocusIndTerm a k
+    • When checking that the pattern signature:
+          LimaFocus_CmdTy 'LimaFocusIndTerm a k
+        fits the type of its context: LimaFocus_CmdTy l a k
+      In the pattern: x :: LimaFocus_CmdTy  'LimaFocusIndTerm a k
+      In the pattern:
+        LimaFocus_CmdTy' (x :: LimaFocus_CmdTy  'LimaFocusIndTerm a k)
+    • Relevant bindings include
+        limaFocusCmdTyMap :: (k -> k')
+                             -> LimaFocus_CmdTy' a k l -> LimaFocus_CmdTy' a k' l
+          (bound at libsrc/FocusedListMachine.lhs:360:3)
+    |
+361 | >       (LimaFocus_CmdTy' (x :: LimaFocus_CmdTy 'LimaFocusIndTerm a k))
+    |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+```
+
+Simply can't restrict the constructor itself in the match:
+
+< limaFocusCmdTyMap f
+< 	((LimaFocus_CmdTy' :: LimaFocus_CmdTy 'LimaFocusIndTerm a k -> LimaFocus_CmdTy' a k 'LimaFocusIndTerm) x)
+< 	= LimaFocus_CmdTy' $ fmap f x
+
+So we try to restrict the full term matched instead of the inner term.
+This should work because `LimaFocus_CmdTy' _ _ 'LimaFocusIndTerm`
+types as a `'LimaFocusIndTerm _ _ (term :: LimaFocusTerm)` at the
+syntactic level and doesn't reduce to a term which doesn't, while `x`
+must then have a type that reduces to `LimaFocus_CmdTy 'LimaFocusIndTerm _ _`
+as a consequence of inferring the type of the full term.
+
+ (x :: LimaFocus_CmdTy 'LimaFocusIndTerm a k))
+ 
+< limaFocusCmdTyMap f
+< 	(LimaFocus_CmdTy' x :: LimaFocus_CmdTy' a k 'LimaFocusIndTerm)
+< 	= LimaFocus_CmdTy' $ fmap f x
+
+Nope! It doesn't want that either, it says `l` is a rigid type variable and
+can't be matched with `'LimaFocusIndTerm`.
+
+< unifyCmdTyAndIndCmd ::
+< 	LimaIndCmd a k'
+< 	-> LimaFocus_CmdTy 'LimaFocusIndTerm a k'
+< unifyCmdTyAndIndCmd = id
+
+Okay, one more time with an inner constructor:
+
+< limaFocusCmdTyMap ::
+< 	( k -> k' )
+< 	-> LimaFocus_CmdTy' a k l
+< 	-> LimaFocus_CmdTy' a k' l
+< limaFocusCmdTyMap f (LimaFocus_CmdTy' (x@(LimaIndCmd x') :: LimaFocus_CmdTy 'LimaFocusIndTerm a k))
+< 	= LimaFocus_CmdTy' $ fmap f x
+
+Nope! Refuses to type `LimaIndCmd x'` as `LimaFocus_CmdTy l a k` because
+it won't unify `l` with `'LimaFocusIndTerm` no matter what.
+
+If we could `fmap` using a dictionary for a functor constraint on
+`LimaFocus_CmdTy l a k` over all `l : LimaFocusTerm`,
+we might could apply the CmdTy `fmap`s using that instead and
+save having to unify `l` with any constant.
+
+This requires `Constraint` be a kind... so, requires `-XConstraintKinds`.
+
+< type family LimaFocus_CmdTy_Functor (term :: LimaFocusTerm) :: * -> Constraint
+< 	where
+< 		LimaFocus_CmdTy_Functor term a = Functor (LimaFocus_CmdTy term a)
+
+< type LFTFunctorDict term a = Dict (LimaFocus_CmdTy_Functor term) a
+
+...and so we might as well try and make our own version of `Dict` that takes
+a `(* -> *) -> Constraint` instead of a `* -> Constraint`, namely `Functor`.
+
+But at this point I doubt this approach completely.
+
+	So it would seem that wrapping recursive sublanguage commands in
+constructors implicitly requires dependent types to work when the parent
+language commands are typed as values of a copresheaf on a term category.
+	Without those constructors, using a constructor of a parent language *term*
+from a recursive sublanguage term and automatically inheriting input and output
+types, we arrive at a more elegant picture where the need for dependent types is
+obvious from the need to promote the recursive sublanguage term used in such a
+term-level constructor so it can be used as a parameter in the sublanguage's input
+and output types (_InTy, _OutTy).
+	Note that the introduction of some of the
+newtypes here is in response to not being able to implement some `liftPrgm'`
+derivations without having functor instances. `liftPrgm'` derivations are where
+the approach with term-level nesting of the recursive sublanguages fails &
+demonstrates that requirement on dependent functions for promotion.
+	Without being able to make commands `LimaFocusCmd a k` in the parent
+language `LimaFocusTerm` a functor, we can't apply `hoistFree` to the section of
+the recursive sublanguage's commands into the parent language's commands
+to derive programs in the parent language from programs in the sublanguage:
+
+```hoistFree :: Functor g => (forall a. f a -> g a) -> Free f b -> Free g b
+~ hoistFree :: Functor (LimaFocusCmd a)
+	=> (forall k. LimaIndCmd a k -> LimaFocusCmd a k)
+	-> LimaIndPrgm a k' -> LimaFocusPrgm a k'```
+
+
+
+> newtype BFLimaListCmd a k
+> 	= BFLimaListCmd (Cmd BFLimaListTerms BFLimaList_InTy' BFLimaList_OutTy' a k)
+> 	deriving (Functor)
+
+> newtype BFLimaCmd a k
+> 	= BFLimaCmd ( CoRec (BFLima_CmdTy' a k) BFLimaTerms )
 
 
 
@@ -292,11 +483,32 @@ Type families can't be partially applied.
 
 
 
-> type LimaSymHdl a k = Hdl LimaSymTerms LimaSym_InTy' LimaSym_OutTy' a k
+About the below newtypes:
+* For languages with recursive sublanguages:
+** Shape is the newtype wrapper of `Cmd`, which alters argument order,
+squashed in with the establishing of shorthand notation that siblings'
+type synonyms perform.
+* For the languages without recursive sublanguages:
+** Newtype involved since otherwise there's multiple copies of (`Cmd` [exact args])
+appearing in other places, leading to error propogation.
 
-> type LimaFocusHdl a k = Hdl LimaFocusTerms LimaFocus_InTy' LimaFocus_OutTy' a k
+> newtype LimaSymHdl a k
+> 	= LimaSymHdl (Hdl LimaSymTerms LimaSym_InTy' LimaSym_OutTy' a k)
+> 	deriving (Functor)
 
-> type BFLimaHdl a k = Hdl BFLimaTerms BFLima_InTy' BFLima_OutTy' a k
+> newtype LimaIndHdl a k
+> 	= LimaIndHdl (Hdl LimaIndTerms LimaInd_InTy' LimaInd_OutTy' a k)
+> 	deriving (Functor)
+
+> newtype LimaFocusHdl a k
+> 	= LimaFocusHdl ( Rec (LimaFocus_HdlTy' a k) LimaFocusTerms )
+
+> newtype BFLimaListHdl a k
+> 	= BFLimaListHdl (Hdl BFLimaListTerms BFLimaList_InTy' BFLimaList_OutTy' a k)
+> 	deriving (Functor)
+
+> newtype BFLimaHdl a k
+> 	= BFLimaHdl ( Rec (BFLima_HdlTy' a k) BFLimaTerms )
 
 
 
@@ -371,25 +583,88 @@ But it's copy & paste, which will have to be good enough.
 
 
 
-> -- | Equal to `Free (LimaSymCmd a) k`
-> type LimaSymPrgm a k = Free (Cmd LimaSymTerms LimaSym_InTy' LimaSym_OutTy' a) k
+> type LimaSymPrgm a k = Free (LimaSymCmd a) k
 
-> -- | Equal to `Free (LimaFocusCmd a) k`
-> type LimaFocusPrgm a k = Free (Cmd LimaFocusTerms LimaFocus_InTy' LimaFocus_OutTy' a) k
+> type LimaIndPrgm a k = Free (LimaIndCmd a) k
 
-> -- | Equal to `Free (BFLimaCmd a) k`
-> type BFLimaPrgm a k = Free (Cmd BFLimaTerms BFLima_InTy' BFLima_OutTy' a) k
+> type LimaFocusPrgm a k = Free (LimaFocusCmd a) k
+
+> type BFLimaListPrgm a k = Free (BFLimaListCmd a) k
+
+> type BFLimaPrgm a k = Free (BFLimaCmd a) k
 
 
 
-> liftedBFLimaTerm :: (term ∈ BFLimaTerms)
+> liftedLimaSymCmd :: (term ∈ LimaSymTerms)
 > 	=> proxy term
-> 	-> BFLima_InTy term a
-> 	-> BFLimaPrgm a (BFLima_OutTy term a)
-> liftedBFLimaTerm = liftPrgm' BFLima_InTy' (\(BFLima_OutTy' x) -> x)
+> 	-> LimaSym_InTy term a
+> 	-> LimaSymPrgm a (LimaSym_OutTy term a)
+> liftedLimaSymCmd = (hoistFree LimaSymCmd .)
+> 	. liftPrgm' LimaSym_InTy' (\(LimaSym_OutTy' x) -> x)
 
-> bflimaInsertSym :: Identity a -> BFLimaPrgm a (Const () a)
-> bflimaInsertSym = liftedBFLimaTerm (Proxy :: Proxy 'BFLimaInsertSym)
+> liftedLimaIndCmd :: (term ∈ LimaIndTerms)
+> 	=> proxy term
+> 	-> LimaInd_InTy term a
+> 	-> LimaIndPrgm a (LimaInd_OutTy term a)
+> liftedLimaIndCmd = (hoistFree LimaIndCmd .)
+> 	. liftPrgm' LimaInd_InTy' (\(LimaInd_OutTy' x) -> x)
+
+
+
+Extending the lifted `LimaIndPrgm` recursive sublanguage programs
+to `LimaFocusPrgm` parent language programs:
+
+Comparison with command datatype implementation of paired DSLs & Interpreters:
+Not important we haven't made this work out, but we can write this more general
+term, by GHC wants `LimaFocus_CmdTy` to be an injective type function:
+
+< limaFocusSublangCmd :: (term ∈ LimaFocusTerms)
+< 	=> proxy term
+< 	-> LimaFocus_CmdTy term a k
+< 	-> LimaFocusCmd a k
+< limaFocusSublangCmd _ = LimaFocusCmd . CoRec . LimaFocus_CmdTy'
+
+Which lets one write (possibly requiring
+`Proxy :: Proxy (LimaFocus_CmdTy 'LimaFocusIndTerm a k)`)
+
+< liftedLimaFocusIndCmd :: LimaIndPrgm a k -> LimaFocusPrgm a k
+< liftedLimaFocusIndCmd = hoistFree $ limaFocusSublangCmd Proxy
+
+which parallels the hoisting of a constructor of a parent language command
+from a recursive sublanguage command.
+
+Instead, we just inline for each variant:
+
+< liftedLimaFocusIndCmd :: LimaIndPrgm a k -> LimaFocusPrgm a k
+< liftedLimaFocusIndCmd = hoistFree $ LimaFocusCmd . CoRec . LimaFocus_CmdTy'
+
+This requires `LimaFocusCmd a` to be a functor, & we see this fails.
+
+
+
+> liftedBFLimaListCmd :: (term ∈ BFLimaListTerms)
+> 	=> proxy term
+> 	-> BFLimaList_InTy term a
+> 	-> BFLimaListPrgm a (BFLimaList_OutTy term a)
+> liftedBFLimaListCmd = (hoistFree BFLimaListCmd .)
+> 	. liftPrgm' BFLimaList_InTy' (\(BFLimaList_OutTy' x) -> x)
+
+-----
+
+
+
+Old
+
+
+
+< liftedBFLimaTerm :: (term ∈ BFLimaTerms)
+< 	=> proxy term
+< 	-> BFLima_InTy term a
+< 	-> BFLimaPrgm a (BFLima_OutTy term a)
+< liftedBFLimaTerm = liftPrgm' BFLima_InTy' (\(BFLima_OutTy' x) -> x)
+
+< bflimaInsertSym :: Identity a -> BFLimaPrgm a (Const () a)
+< bflimaInsertSym = liftedBFLimaTerm (Proxy :: Proxy 'BFLimaInsertSym)
 
 We can't derive these expressions until dependent haskell exists, because
 it constitutes a `(term :: termTy) -> f term`. Generating singletons
@@ -410,22 +685,22 @@ language is undocumented.
 > 		[ liftName ++ " :: " ++ inTFName ++ " '" ++ termName ++ " a -> " ++ prgmTyName ++ " a (" ++ outTFName ++ " '" ++ termName ++" a)"
 > 		, liftName ++ " = " ++ specialLiftName ++ " (Proxy :: Proxy '" ++ termName ++ ")" ]
 
-> liftAtomStringBFLima :: (String, String) {- (Term title, name of its lift) -} -> IO ()
-> liftAtomStringBFLima = putStrLn . liftAtomString "BFLima_InTy" "BFLima_OutTy" "BFLimaPrgm" "liftedBFLimaTerm"
+< liftAtomStringBFLima :: (String, String) {- (Term title, name of its lift) -} -> IO ()
+< liftAtomStringBFLima = putStrLn . liftAtomString "BFLima_InTy" "BFLima_OutTy" "BFLimaPrgm" "liftedBFLimaTerm"
 
-> liftAtomStringBFLima' :: String -> IO ()
-> liftAtomStringBFLima' (_:_:_:xs) = liftAtomStringBFLima ("BFL"++xs, "bfl"++xs)
-> liftAtomStringBFLima' _ = error "String not long enough to be a term name."
+< liftAtomStringBFLima' :: String -> IO ()
+< liftAtomStringBFLima' (_:_:_:xs) = liftAtomStringBFLima ("BFL"++xs, "bfl"++xs)
+< liftAtomStringBFLima' _ = error "String not long enough to be a term name."
 
-> liftedAtomStringsBFLima :: IO ()
-> liftedAtomStringsBFLima = mapM_ liftAtomStringBFLima'
-> 	$ ["BFLimaInsertSym", "BFLimaDeleteSym",
-> 	"BFLimaMainFocusCmd", -- ignore this one
-> 	"BFLimaPickedFocusCmd"] -- ignore this one
+< liftedAtomStringsBFLima :: IO ()
+< liftedAtomStringsBFLima = mapM_ liftAtomStringBFLima'
+< 	$ ["BFLimaInsertSym", "BFLimaDeleteSym",
+< 	"BFLimaMainFocusCmd", -- ignore this one
+< 	"BFLimaPickedFocusCmd"] -- ignore this one
 
-> bflimaDeleteSym :: BFLima_InTy 'BFLimaDeleteSym a
-> 	-> BFLimaPrgm a (BFLima_OutTy 'BFLimaDeleteSym a)
-> bflimaDeleteSym = liftedBFLimaTerm (Proxy :: Proxy 'BFLimaDeleteSym)
+< bflimaDeleteSym :: BFLima_InTy 'BFLimaDeleteSym a
+< 	-> BFLimaPrgm a (BFLima_OutTy 'BFLimaDeleteSym a)
+< bflimaDeleteSym = liftedBFLimaTerm (Proxy :: Proxy 'BFLimaDeleteSym)
 
 Oh whoops! We can't make these parametricly, haha!
 
