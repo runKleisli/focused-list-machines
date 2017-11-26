@@ -362,10 +362,8 @@ appearing in other places, leading to error propogation.
 
 > instance CmdsHandlersPair (LimaFocusCmd a) (LimaFocusHdl a)
 > 	where
-> 	pairCH fn (LimaFocusHdl r _) (LimaFocusIndCmd c)
-> 		= pairCH fn r c
-> 	pairCH fn (LimaFocusHdl _ r) (LimaFocusSymCmd c)
-> 		= pairCH fn r c
+> 	pairCH fn (LimaFocusHdl r _) (LimaFocusIndCmd c) = pairCH fn r c
+> 	pairCH fn (LimaFocusHdl _ r) (LimaFocusSymCmd c) = pairCH fn r c
 
 
 
