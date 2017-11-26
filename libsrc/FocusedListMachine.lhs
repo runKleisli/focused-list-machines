@@ -18,7 +18,8 @@ DSL-Interpreter pairings & their construction
 
 < import Data.Functor.Adjunction
 
-> import Data.Functor.Pairing hiding (pair, Pairing, pairCH)
+> import Data.Functor.Pairing hiding (pair, pairCH)
+> import qualified Data.Functor.Pairing as Pairing (pair, pairCH)
 
 In here, we use corecords for the programs, and records for the interpreters.
 
@@ -124,7 +125,7 @@ or
 
 
 
-> type Pairing f g = forall a b c. (a -> b -> c) -> g a -> f b -> c
+< type Pairing f g = forall a b c. (a -> b -> c) -> g a -> f b -> c
 
 "zapWithAdjunction" in reverse
 
