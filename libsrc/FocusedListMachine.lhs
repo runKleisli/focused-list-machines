@@ -18,8 +18,7 @@ DSL-Interpreter pairings & their construction
 
 < import Data.Functor.Adjunction
 
-> import Data.Functor.Pairing hiding (pair, pairCH)
-> import qualified Data.Functor.Pairing as Pairing (pair, pairCH)
+> import Data.Functor.Pairing
 
 In here, we use corecords for the programs, and records for the interpreters.
 
@@ -125,34 +124,15 @@ or
 
 
 
-< type Pairing f g = forall a b c. (a -> b -> c) -> g a -> f b -> c
-
-"zapWithAdjunction" in reverse
-
-> zWA :: (a -> b -> c) -> (x, a) -> (x -> b) -> c
-> zWA fn (x,a) xfnToB = fn a (xfnToB x)
-
-> pairCH :: Pairing (Cmd xs inTy outTy a) (Hdl xs inTy outTy a)
-> pairCH fn (Hdl h) (Cmd (CoRec (IYform (i, kfn))))
-> 	= case rget Proxy h of ROform g -> (pRL . pLR) fn g (i, kfn)
-> 	where
-> 		pLR = zWA
-> 		pRL = flip . pLR . flip
+> pairCH_typical :: Pairing (Cmd xs inTy outTy a) (Hdl xs inTy outTy a)
+> pairCH_typical fn (Hdl h) (Cmd (CoRec (IYform (i, kfn))))
+> 	= case rget Proxy h of ROform g -> (pairRL . pairLR) fn g (i, kfn)
 
 Hahahahaha that was so easy.
 Credit to (Data.Vinyl.CoRec.match).
 
-
-
-> class CanonicalPairing f g where
-> 	pairCan :: Pairing f g
-
-> instance CanonicalPairing (Cmd xs inTy outTy a) (Hdl xs inTy outTy a)
-> 	where pairCan = pairCH
-
-> pair :: (CanonicalPairing f g) => Pairing (Free f) (Cofree g)
-> pair p (a :< _) (Pure x) = p a x
-> pair p (_ :< gCga) (Free fFfx) = pairCan (pair p) gCga fFfx
+> instance CmdsHandlersPair (Cmd xs inTy outTy a) (Hdl xs inTy outTy a)
+> 	where pairCH = pairCH_typical
 
 -----
 
