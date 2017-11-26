@@ -18,6 +18,8 @@ DSL-Interpreter pairings & their construction
 
 < import Data.Functor.Adjunction
 
+> import Data.Functor.Pairing hiding (pair, Pairing, pairCH)
+
 In here, we use corecords for the programs, and records for the interpreters.
 
 > import Data.Vinyl
