@@ -326,10 +326,10 @@ appearing in other places, leading to error propogation.
 > 	= LimaIndHdl (Hdl LimaIndTerms LimaInd_InTy' LimaInd_OutTy' a k)
 > 	deriving (Functor)
 
-> data LimaFocusHdl a k =
-> 	LimaFocusIndHdl (LimaIndHdl a k)
-> 	| LimaFocusSymHdl (LimaSymHdl a k)
->	deriving (Functor)
+> data LimaFocusHdl a k = LimaFocusHdl {
+> 	limaFocusIndHdl :: LimaIndHdl a k
+> 	, limaFocusSymHdl :: LimaSymHdl a k
+>	}	deriving (Functor)
 
 
 
@@ -337,11 +337,11 @@ appearing in other places, leading to error propogation.
 > 	= BFLimaListHdl (Hdl BFLimaListTerms BFLimaList_InTy' BFLimaList_OutTy' a k)
 > 	deriving (Functor)
 
-> data BFLimaHdl a k =
-> 	BFLimaListPartHdl (BFLimaListHdl a k)
-> 	| BFLimaMainFocusHdl (LimaFocusHdl a k)
-> 	| BFLimaPickedFocusHdl (LimaFocusHdl a k)
-> 	deriving (Functor)
+> data BFLimaHdl a k = BFLimaHdl {
+> 	bflimaListPartHdl :: BFLimaListHdl a k
+> 	, bflimaMainFocusHdl :: LimaFocusHdl a k
+> 	, bflimaPickedFocusHdl :: LimaFocusHdl a k
+> 	}	deriving (Functor)
 
 
 
