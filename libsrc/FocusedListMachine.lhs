@@ -350,6 +350,34 @@ appearing in other places, leading to error propogation.
 * Derive, explain, replace derivation of handler type train of thought
 & cmd-handlers pairing train of thought
 
+-----
+
+
+
+> instance CmdsHandlersPair (LimaSymCmd a) (LimaSymHdl a)
+> 	where pairCH fn (LimaSymHdl r) (LimaSymCmd c) = pairCH fn r c
+
+> instance CmdsHandlersPair (LimaIndCmd a) (LimaIndHdl a)
+> 	where pairCH fn (LimaIndHdl r) (LimaIndCmd c) = pairCH fn r c
+
+> instance CmdsHandlersPair (LimaFocusCmd a) (LimaFocusHdl a)
+> 	where
+> 	pairCH fn (LimaFocusHdl r _) (LimaFocusIndCmd c)
+> 		= pairCH fn r c
+> 	pairCH fn (LimaFocusHdl _ r) (LimaFocusSymCmd c)
+> 		= pairCH fn r c
+
+
+
+> instance CmdsHandlersPair (BFLimaListCmd a) (BFLimaListHdl a)
+> 	where pairCH fn (BFLimaListHdl r) (BFLimaListCmd c) = pairCH fn r c
+
+> instance CmdsHandlersPair (BFLimaCmd a) (BFLimaHdl a)
+> 	where
+> 	pairCH fn (BFLimaHdl r _ _) (BFLimaListPartCmd c) = pairCH fn r c
+> 	pairCH fn (BFLimaHdl _ r _) (BFLimaMainFocusCmd c) = pairCH fn r c
+> 	pairCH fn (BFLimaHdl _ _ r) (BFLimaPickedFocusCmd c) = pairCH fn r c
+
 
 
 === Configurations ===
