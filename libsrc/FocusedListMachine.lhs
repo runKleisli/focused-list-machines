@@ -30,7 +30,7 @@ In here, we use corecords for the programs, and records for the interpreters.
 
 Notation
 
-> import Control.Arrow ((&&&))
+> import Control.Arrow ((&&&), first)
 
 
 
@@ -384,6 +384,94 @@ appearing in other places, leading to error propogation.
 * Library - functions
 * Library - operations
 * Library - handler configurations
+
+-----
+
+
+
+Support
+
+> liftRO ::
+> 	( inTy' term a -> i ) {- Decompose input -}
+> 	-> ( o -> outTy' term a ) {- Compose output -}
+> 	-> proxy term
+> 	-> ( d -> (i -> (o, b)) ) {- Goal process -}
+> 	{- Lifted process for configuring a handler to use -}
+> 	-> d -> RO inTy' outTy' a b term
+> liftRO decomp comp _ fn d = ROform $ first comp . fn d . decomp
+
+-----
+
+
+
+> liftCoLimaSym ::
+> 	proxy term
+> 	-> ( d -> (LimaSym_InTy term a -> (LimaSym_OutTy term a, b)) )
+> 	-> d -> RO LimaSym_InTy' LimaSym_OutTy' a b term
+> liftCoLimaSym = liftRO (\(LimaSym_InTy' a) -> a) LimaSym_OutTy'
+
+Here we start with the operation you might already have expressed as
+an update to a piece of state.
+
+< coLimaSetSymIntuitive :: a -> (a -> a)
+< coLimaSetSymIntuitive = const id
+
+This is not far from something that can be used to configure a handler.
+All it needs is for the result function to produce some output, some
+response for future programs, not considering its side effects on state.
+
+This version conforms to the structure of a handler projection for the
+`LimaSetSym` command:
+
+> coLimaSetSym :: a -> (Identity a -> (Const () a, a))
+> coLimaSetSym = const $ (const (Const ()) &&& getIdentity)
+
+That can then be lifted to an explicitly typed handler factor
+
+< coLimaSetSymRO :: a -> RO LimaSym_InTy' LimaSym_OutTy' a a 'LimaSetSym
+< coLimaSetSymRO = liftCoLimaSym (Proxy :: Proxy 'LimaSetSym)
+< 	coLimaSetSymConforming
+
+Could also deconstruct the `Hdl` part and `(<+>)` instead of `(:&)`, but this
+makes the transition in types less transparent when developing from
+featureset to handlerset
+
+< coLimaSetSymHdl ::
+< 	a -> Hdl '[ 'LimaSetSym ] LimaSym_InTy' LimaSym_OutTy' a a
+< coLimaSetSymHdl = Hdl . (:& RNil) . coLimaSetSymRO
+
+Likewise for LimaGetSym, the configuration of a state symbol's getting is
+the determination of what `Maybe a` will be given when requesting this
+state, together with the no-op update to the state this request does.
+
+< coLimaGetSymIntuitive :: a -> (Maybe a, a)
+< coLimaGetSymIntuitive = (Just &&& id)
+
+> coLimaGetSym :: a -> (Const () a -> (Maybe a, a))
+> coLimaGetSym = const . (Just &&& id)
+
+< coLimaGetSymRO :: a -> RO LimaSym_InTy' LimaSym_OutTy' a a 'LimaGetSym
+< coLimaGetSymRO = liftCoLimaSym (Proxy :: Proxy 'LimaGetSym) coLimaGetSym
+
+Putting together the two handler factors gives us the fully configured handler,
+or rather putting together the two initializers of command interpretations
+gives an initializer for the handler.
+
+< confLimaSymHdl :: a -> LimaSymHdl a a
+< confLimaSymHdl a = LimaSymHdl . Hdl
+< 	$ coLimaSetSymRO a :& coLimaGetSymRO a :& RNil
+
+The process for lifting conforming command initializers being regular plumbing,
+we can treat it as setting the fields of the handler, leading to a nice, isolated
+point at which consistency of all field values with the commands they handle is
+enforced as written, at the culmination of the language handling implementation
+and by the lift specialized at its preparation.
+
+> confLimaSymHdl :: a -> LimaSymHdl a a
+> confLimaSymHdl a = LimaSymHdl . Hdl
+> 	$ liftCoLimaSym (Proxy :: Proxy 'LimaSetSym) coLimaSetSym a
+> 	:& liftCoLimaSym (Proxy :: Proxy 'LimaGetSym) coLimaGetSym a
+> 	:& RNil
 
 
 
