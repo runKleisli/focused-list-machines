@@ -183,19 +183,19 @@ so they can form co/records over the term category.
 > 	, 'LimaRefocusNext
 > 	, 'LimaRefocusPrev ]
 
-> type family LimaInd_InTy (t :: LimaIndTerm) :: * -> * where
-> 	LimaInd_InTy 'LimaGetFocusInd = Const ()
-> 	LimaInd_InTy 'LimaRefocusInd = Const (Maybe Int)
-> 	LimaInd_InTy 'LimaTrashFocus = Const ()
-> 	LimaInd_InTy 'LimaRefocusNext = Const ()
-> 	LimaInd_InTy 'LimaRefocusPrev = Const ()
+> type family LimaInd_InTy (t :: LimaIndTerm) (a :: *) :: * where
+> 	LimaInd_InTy 'LimaGetFocusInd a = ()
+> 	LimaInd_InTy 'LimaRefocusInd a = Maybe Int
+> 	LimaInd_InTy 'LimaTrashFocus a = ()
+> 	LimaInd_InTy 'LimaRefocusNext a = ()
+> 	LimaInd_InTy 'LimaRefocusPrev a = ()
 
-> type family LimaInd_OutTy (t :: LimaIndTerm) :: * -> * where
-> 	LimaInd_OutTy 'LimaGetFocusInd = Const (Maybe Int)
-> 	LimaInd_OutTy 'LimaRefocusInd = Const ()
-> 	LimaInd_OutTy 'LimaTrashFocus = Const ()
-> 	LimaInd_OutTy 'LimaRefocusNext = Const ()
-> 	LimaInd_OutTy 'LimaRefocusPrev = Const ()
+> type family LimaInd_OutTy (t :: LimaIndTerm) (a :: *) :: * where
+> 	LimaInd_OutTy 'LimaGetFocusInd a = Maybe Int
+> 	LimaInd_OutTy 'LimaRefocusInd a = ()
+> 	LimaInd_OutTy 'LimaTrashFocus a = ()
+> 	LimaInd_OutTy 'LimaRefocusNext a = ()
+> 	LimaInd_OutTy 'LimaRefocusPrev a = ()
 
 > newtype LimaInd_InTy' f a
 > 	= LimaInd_InTy' (LimaInd_InTy f a)
@@ -232,13 +232,13 @@ This is to avoid requiring dependently typed functions.
 > 	[ 'BFLimaInsertSym
 > 	, 'BFLimaDeleteSym ]
 
-> type family BFLimaList_InTy (t :: BFLimaListTerm) :: * -> * where
-> 	BFLimaList_InTy 'BFLimaInsertSym = Identity
-> 	BFLimaList_InTy 'BFLimaDeleteSym = Const ()
+> type family BFLimaList_InTy (t :: BFLimaListTerm) (a :: *) :: * where
+> 	BFLimaList_InTy 'BFLimaInsertSym a = a
+> 	BFLimaList_InTy 'BFLimaDeleteSym a = ()
 
-> type family BFLimaList_OutTy (t :: BFLimaListTerm) :: * -> * where
-> 	BFLimaList_OutTy 'BFLimaInsertSym = Const ()
-> 	BFLimaList_OutTy 'BFLimaDeleteSym = Const ()
+> type family BFLimaList_OutTy (t :: BFLimaListTerm) (a :: *) :: * where
+> 	BFLimaList_OutTy 'BFLimaInsertSym a = ()
+> 	BFLimaList_OutTy 'BFLimaDeleteSym a = ()
 
 > newtype BFLimaList_InTy' f a
 > 	= BFLimaList_InTy' (BFLimaList_InTy f a)
@@ -575,19 +575,19 @@ Entering in things of this form will let us query GHC for its type to replace in
 < limaGetFocusInd :: LimaInd_InTy 'LimaGetFocusInd a -> LimaIndPrgm a (LimaInd_OutTy 'LimaGetFocusInd a)
 < limaGetFocusInd = liftedLimaIndCmd (Proxy :: Proxy 'LimaGetFocusInd)
 
-> limaGetFocusInd :: Const () a -> LimaIndPrgm a (Const (Maybe Int) a)
+> limaGetFocusInd :: () -> LimaIndPrgm a (Maybe Int)
 > limaGetFocusInd = liftedLimaIndCmd (Proxy :: Proxy 'LimaGetFocusInd)
 
-> limaRefocusInd :: Const (Maybe Int) a -> LimaIndPrgm a (Const () a)
+> limaRefocusInd :: Maybe Int -> LimaIndPrgm a ()
 > limaRefocusInd = liftedLimaIndCmd (Proxy :: Proxy 'LimaRefocusInd)
 
-> limaTrashFocus :: Const () a -> LimaIndPrgm a (Const () a)
+> limaTrashFocus :: () -> LimaIndPrgm a ()
 > limaTrashFocus = liftedLimaIndCmd (Proxy :: Proxy 'LimaTrashFocus)
 
-> limaRefocusNext :: Const () a -> LimaIndPrgm a (Const () a)
+> limaRefocusNext :: () -> LimaIndPrgm a ()
 > limaRefocusNext = liftedLimaIndCmd (Proxy :: Proxy 'LimaRefocusNext)
 
-> limaRefocusPrev :: Const () a -> LimaIndPrgm a (Const () a)
+> limaRefocusPrev :: () -> LimaIndPrgm a ()
 > limaRefocusPrev = liftedLimaIndCmd (Proxy :: Proxy 'LimaRefocusPrev)
 
 
@@ -615,10 +615,10 @@ focus program sections for constituent sublanguages
 < bflimaInsertSym :: BFLimaList_InTy 'BFLimaInsertSym a -> BFLimaListPrgm a (BFLimaList_OutTy 'BFLimaInsertSym a)
 < bflimaInsertSym = liftedBFLimaListCmd (Proxy :: Proxy 'BFLimaInsertSym)
 
-> bflimaInsertSym :: Identity a -> BFLimaListPrgm a (Const () a)
+> bflimaInsertSym :: a -> BFLimaListPrgm a ()
 > bflimaInsertSym = liftedBFLimaListCmd (Proxy :: Proxy 'BFLimaInsertSym)
 
-> bflimaDeleteSym :: Const () a -> BFLimaListPrgm a (Const () a)
+> bflimaDeleteSym :: () -> BFLimaListPrgm a ()
 > bflimaDeleteSym = liftedBFLimaListCmd (Proxy :: Proxy 'BFLimaDeleteSym)
 
 
