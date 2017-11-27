@@ -774,6 +774,42 @@ From the top:
 
 
 
+> confSubrecLimaFocusHdl ::
+> 	proxy s
+> 	-> FieldRec '[ '("LimaSymTable", [sym]), '(s, Maybe Int) ]
+> 	-> LimaFocusHdl sym ( FieldRec '[ '("LimaSymTable", [sym]), '(s, Maybe Int) ] )
+> confSubrecLimaFocusHdl _ (Field syms :& Field mai :& RNil)
+> 	= fmap (\(x,y) -> Field x :& Field y :& RNil) $ confLimaFocusHdl (syms, mai)
+
+> confFLimaFocusHdl :: FocusedLima sym -> LimaFocusHdl sym (FocusedLima sym)
+> confFLimaFocusHdl (FocusedLima rs) = fmap FocusedLima
+> 	$ confSubrecLimaFocusHdl Proxy rs
+
+> confBFLimaMainFocusHdl ::
+> 	BifocusedLima sym -> LimaFocusHdl sym (BifocusedLima sym)
+> confBFLimaMainFocusHdl (BifocusedLima rs) = fmap BifocusedLima
+> 	$ rsubset (confSubrecLimaFocusHdl (Proxy :: Proxy "LimaFocusMain")) rs
+
+> confBFLimaPickedFocusHdl ::
+> 	BifocusedLima sym -> LimaFocusHdl sym (BifocusedLima sym)
+> confBFLimaPickedFocusHdl (BifocusedLima rs) = fmap BifocusedLima
+> 	$ rsubset (confSubrecLimaFocusHdl (Proxy :: Proxy "LimaFocusPicked")) rs
+
+> confSelLimaFocusHdl ::
+> 	SelectingLima sym -> LimaFocusHdl sym (SelectingLima sym)
+> confSelLimaFocusHdl (SelectingLima rs) = fmap SelectingLima
+> 	$ rsubset (confSubrecLimaFocusHdl (Proxy :: Proxy "LimaFocusMain")) rs
+
+
+
+> confBFLimaHdl :: BifocusedLima sym -> BFLimaHdl sym (BifocusedLima sym)
+> confBFLimaHdl bflima = BFLimaHdl
+> 	(confBFLimaListHdl bflima)
+> 	(confBFLimaMainFocusHdl bflima)
+> 	(confBFLimaPickedFocusHdl bflima)
+
+
+
 == Interpreters ==
 
 * Type
