@@ -497,6 +497,31 @@ and by the lift specialized at its preparation.
 
 
 
+From the top:
+
+> atfocCoLimaSetSymIntuitive :: ([sym], Maybe Int) -> (sym -> ([sym], Maybe Int))
+> atfocCoLimaGetSymIntuitive :: ([sym], Maybe Int) -> (Maybe sym, ([sym], Maybe Int))
+
+> atfocCoLimaSetSymIntuitive state@(_, Nothing) = const state
+> atfocCoLimaSetSymIntuitive (syms, mi@(Just i)) = (flip (replaceAt i) syms &&& const mi)
+
+> atfocCoLimaGetSymIntuitive state@(_, Nothing) = (Nothing, state)
+> atfocCoLimaGetSymIntuitive state@(syms, Just i) = (Just (syms!!i), state)
+
+> atfocCoLimaSetSym :: ([sym], Maybe Int) -> (sym -> ((), ([sym], Maybe Int)))
+> atfocCoLimaGetSym :: ([sym], Maybe Int) -> (() -> (Maybe sym, ([sym], Maybe Int)))
+
+> atfocCoLimaSetSym = fmap ((),) . atfocCoLimaSetSymIntuitive
+> atfocCoLimaGetSym = const . atfocCoLimaGetSymIntuitive
+
+> confLimaFocusSymHdl :: ([sym], Maybe Int) -> LimaSymHdl sym ([sym], Maybe Int)
+> confLimaFocusSymHdl a = LimaSymHdl . Hdl
+> 	$ liftCoLimaSym (Proxy :: Proxy 'LimaSetSym) atfocCoLimaSetSym a
+> 	:& liftCoLimaSym (Proxy :: Proxy 'LimaGetSym) atfocCoLimaGetSym a
+> 	:& RNil
+
+
+
 > liftCoLimaInd ::
 > 	proxy term
 > 	-> ( d -> (LimaInd_InTy term a -> (LimaInd_OutTy term a, b)) )
@@ -536,6 +561,12 @@ and by the lift specialized at its preparation.
 > 	:& liftCoLimaInd (Proxy :: Proxy 'LimaRefocusNext) coLimaRefocusNext a
 > 	:& liftCoLimaInd (Proxy :: Proxy 'LimaRefocusPrev) coLimaRefocusPrev a
 > 	:& RNil
+
+
+
+> confLimaFocusHdl :: ([sym], Maybe Int) -> LimaFocusHdl sym ([sym], Maybe Int)
+> confLimaFocusHdl = uncurry LimaFocusHdl
+> 	. (confLimaIndHdl &&& confLimaFocusSymHdl)
 
 
 
