@@ -1,8 +1,6 @@
 > {-# LANGUAGE MultiParamTypeClasses, RankNTypes, GADTs, TupleSections
-> , DeriveFunctor, ScopedTypeVariables, DataKinds, KindSignatures, TypeFamilies
-> , PolyKinds, TypeOperators, FlexibleContexts, FlexibleInstances
-> , NoMonomorphismRestriction, TypeSynonymInstances, KindSignatures
-> , ImpredicativeTypes #-}
+> , DeriveFunctor, ScopedTypeVariables, DataKinds, TypeFamilies, PolyKinds
+> , TypeOperators, FlexibleContexts, FlexibleInstances #-}
 
 > module FocusedListMachine where
 
