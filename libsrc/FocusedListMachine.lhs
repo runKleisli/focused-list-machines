@@ -57,7 +57,18 @@ Notation
 
 === Bounding indices ===
 
-* Library
+> predAsNat :: Int -> Int
+> predAsNat z | z <= 0 = 0
+> predAsNat z = pred z
+
+> succBoundedBy :: Int -> Int -> Int
+> succBoundedBy b z | b > (1+z) = (1+z)
+> succBoundedBy b _ = b-1
+
+> clampAt :: Int -> Int -> Int
+> clampAt k z = if z < 0 then 0
+> 	else if z > (k-1) then (k-1)
+> 	else z
 
 
 
