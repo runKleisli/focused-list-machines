@@ -495,28 +495,36 @@ and by the lift specialized at its preparation.
 > coLimaGetFocusIndIntuitive :: ([sym], Maybe Int) -> (Maybe Int, ([sym], Maybe Int))
 > coLimaRefocusIndIntuitive :: ([sym], Maybe Int) -> (Maybe Int -> ([sym], Maybe Int))
 > coLimaTrashFocusIntuitive :: ([sym], Maybe Int) -> ([sym], Maybe Int)
-
-< coLimaRefocusNextIntuitive :: ([sym], Maybe Int) -> ([sym], Maybe Int)
-< coLimaRefocusPrevIntuitive :: ([sym], Maybe Int) -> ([sym], Maybe Int)
+> coLimaRefocusNextIntuitive :: ([sym], Maybe Int) -> ([sym], Maybe Int)
+> coLimaRefocusPrevIntuitive :: ([sym], Maybe Int) -> ([sym], Maybe Int)
 
 > coLimaGetFocusIndIntuitive = (snd &&& id)
 > coLimaRefocusIndIntuitive = flip $ fmap . const
 > coLimaTrashFocusIntuitive = fmap $ const Nothing
-
-< coLimaRefocusNextIntuitive state@(syms, _)
-< 	= ( fmap . fmap ) ( succBoundedBy (length syms) ) state
-< coLimaRefocusPrevIntuitive = fmap . fmap $ predAsNat
+> coLimaRefocusNextIntuitive state@(syms, _)
+> 	= ( fmap . fmap ) ( succBoundedBy (length syms) ) state
+> coLimaRefocusPrevIntuitive = fmap . fmap $ predAsNat
 
 > coLimaGetFocusInd :: ([sym], Maybe Int) -> ( () -> ( Maybe Int, ([sym], Maybe Int) ) )
 > coLimaRefocusInd :: ([sym], Maybe Int) -> ( Maybe Int -> ( (), ([sym], Maybe Int) ) )
 > coLimaTrashFocus :: ([sym], Maybe Int) -> ( () -> ( (), ([sym], Maybe Int) ) )
-
-< coLimaRefocusNext :: ([sym], Maybe Int) -> ( () -> ( (), ([sym], Maybe Int) ) )
-< coLimaRefocusPrev :: ([sym], Maybe Int) -> ( () -> ( (), ([sym], Maybe Int) ) )
+> coLimaRefocusNext :: ([sym], Maybe Int) -> ( () -> ( (), ([sym], Maybe Int) ) )
+> coLimaRefocusPrev :: ([sym], Maybe Int) -> ( () -> ( (), ([sym], Maybe Int) ) )
 
 > coLimaGetFocusInd = const . coLimaGetFocusIndIntuitive
 > coLimaRefocusInd = fmap ((),) . coLimaRefocusIndIntuitive
 > coLimaTrashFocus = const . ((),) . coLimaTrashFocusIntuitive
+> coLimaRefocusNext = const . ((),) . coLimaRefocusNextIntuitive
+> coLimaRefocusPrev = const . ((),) . coLimaRefocusPrevIntuitive
+
+> confLimaIndHdl :: ([sym], Maybe Int) -> LimaIndHdl sym ([sym], Maybe Int)
+> confLimaIndHdl a = LimaIndHdl . Hdl
+> 	$ liftCoLimaInd (Proxy :: Proxy 'LimaGetFocusInd) coLimaGetFocusInd a
+> 	:& liftCoLimaInd (Proxy :: Proxy 'LimaRefocusInd) coLimaRefocusInd a
+> 	:& liftCoLimaInd (Proxy :: Proxy 'LimaTrashFocus) coLimaTrashFocus a
+> 	:& liftCoLimaInd (Proxy :: Proxy 'LimaRefocusNext) coLimaRefocusNext a
+> 	:& liftCoLimaInd (Proxy :: Proxy 'LimaRefocusPrev) coLimaRefocusPrev a
+> 	:& RNil
 
 
 
