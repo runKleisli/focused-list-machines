@@ -153,13 +153,13 @@ so they can form co/records over the term category.
 
 > type LimaSymTerms = ['LimaSetSym, 'LimaGetSym]
 
-> type family LimaSym_InTy (t :: LimaSymTerm) :: * -> * where
-> 	LimaSym_InTy 'LimaSetSym = Identity
-> 	LimaSym_InTy 'LimaGetSym = Const ()
+> type family LimaSym_InTy (t :: LimaSymTerm) (a :: *) :: * where
+> 	LimaSym_InTy 'LimaSetSym a = a
+> 	LimaSym_InTy 'LimaGetSym a = ()
 
-> type family LimaSym_OutTy (t :: LimaSymTerm) :: * -> * where
-> 	LimaSym_OutTy 'LimaSetSym = Const ()
-> 	LimaSym_OutTy 'LimaGetSym = Maybe
+> type family LimaSym_OutTy (t :: LimaSymTerm) (a :: *) :: * where
+> 	LimaSym_OutTy 'LimaSetSym a = ()
+> 	LimaSym_OutTy 'LimaGetSym a = Maybe a
 
 > newtype LimaSym_InTy' f a
 > 	= LimaSym_InTy' (LimaSym_InTy f a)
@@ -423,8 +423,8 @@ response for future programs, not considering its side effects on state.
 This version conforms to the structure of a handler projection for the
 `LimaSetSym` command:
 
-> coLimaSetSym :: a -> (Identity a -> (Const () a, a))
-> coLimaSetSym = const $ (const (Const ()) &&& getIdentity)
+> coLimaSetSym :: a -> (a -> ((), a))
+> coLimaSetSym = const $ (const () &&& id)
 
 That can then be lifted to an explicitly typed handler factor
 
@@ -447,7 +447,7 @@ state, together with the no-op update to the state this request does.
 < coLimaGetSymIntuitive :: a -> (Maybe a, a)
 < coLimaGetSymIntuitive = (Just &&& id)
 
-> coLimaGetSym :: a -> (Const () a -> (Maybe a, a))
+> coLimaGetSym :: a -> (() -> (Maybe a, a))
 > coLimaGetSym = const . (Just &&& id)
 
 < coLimaGetSymRO :: a -> RO LimaSym_InTy' LimaSym_OutTy' a a 'LimaGetSym
@@ -554,10 +554,10 @@ Entering in things of this form will let us query GHC for its type to replace in
 < limaSetSym :: LimaSym_InTy 'LimaSetSym a -> LimaSymPrgm a (LimaSym_OutTy 'LimaSetSym a)
 < limaSetSym = liftedLimaSymCmd (Proxy :: Proxy 'LimaSetSym)
 
-> limaSetSym :: Identity a -> LimaSymPrgm a (Const () a)
+> limaSetSym :: a -> LimaSymPrgm a ()
 > limaSetSym = liftedLimaSymCmd (Proxy :: Proxy 'LimaSetSym)
 
-> limaGetSym :: Const () a -> LimaSymPrgm a (Maybe a)
+> limaGetSym :: () -> LimaSymPrgm a (Maybe a)
 > limaGetSym = liftedLimaSymCmd (Proxy :: Proxy 'LimaGetSym)
 
 
