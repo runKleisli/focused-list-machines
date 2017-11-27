@@ -1052,3 +1052,62 @@ language is undocumented.
 * Library
 * Examples
 * Extended program inventory
+
+-----
+
+
+
+Support
+
+> stepDSLState :: (CmdsHandlersPair f g, Functor g)
+> 	=> (stateTy -> g stateTy)
+> 	-> Free f k
+> 	-> stateTy -> stateTy
+> stepDSLState f = flip $ pair const . coiter f
+
+> stepPrgmState ::
+> 	(stateTy -> Hdl termList inTy outTy a stateTy)
+> 	-> Prgm termList inTy outTy a k
+> 	-> stateTy -> stateTy
+> stepPrgmState = stepDSLState
+
+
+
+> debugOutputAndState :: (Show a, Show b) => a -> b -> IO ()
+> debugOutputAndState a b =
+> 	print (take 44 $ repeat '-')
+> 	>> print "Program/expression output:"
+> 	>> print b
+> 	>> print "Interpreted state:"
+> 	>> print a
+> 	>> print (take 44 $ repeat '-')
+
+> debugInterpDSL :: (Show stateTy, Show k, CmdsHandlersPair f g, Functor g)
+> 	=> Cofree g stateTy {- Initial interpreter state -}
+> 	-> Free f k {- Program to debug -}
+> 	-> IO ()
+> debugInterpDSL = pair debugOutputAndState
+
+-----
+
+
+
+> stepBFLima :: BFLimaPrgm sym a -> BifocusedLima sym -> BifocusedLima sym
+> stepBFLima = stepDSLState confBFLimaHdl
+
+> debugBFLimaPrgm :: forall sym a. (Show sym, Show a)
+> 	=> BFLimaPrgm sym a -> IO ()
+> debugBFLimaPrgm = debugInterpDSL
+> 	(blankBFLimaInterp :: BFLimaInterp sym (BifocusedLima sym))
+
+
+
+There. Like magic:
+
+< debugBFLimaPrgm $ (bflimaListPartPrgm . bflimaInsertSym) 'a'
+"--------------------------------------------"
+"Program/expression output:"
+()
+"Interpreted state:"
+BifocusedLima {LimaSymTable :-> "a", LimaFocusMain :-> Just 0, LimaFocusPicked :-> Nothing}
+"--------------------------------------------"
