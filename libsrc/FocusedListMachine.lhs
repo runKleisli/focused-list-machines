@@ -32,6 +32,10 @@ Notation
 
 > import Control.Arrow ((&&&), first)
 
+Algorithms
+
+> import Data.Maybe (mapMaybe)
+
 
 
 == Orientation ==
@@ -66,7 +70,7 @@ commands as transitions of different machines as subrecord updates.
 > 	'[ '("LimaSymTable", [sym])
 > 	, '("LimaFocusMain", Maybe Int)
 > 	, '("LimaFocusPicked", Maybe Int)
-> 	, '("LimaFocusSelection", [Maybe Int]) ]
+> 	, '("LimaFocusSelection", [Int]) ]
 
 > type FocusedLimaStateFactors sym =
 > 	'[ '("LimaSymTable", [sym])
@@ -80,7 +84,7 @@ commands as transitions of different machines as subrecord updates.
 > type SelectingLimaStateFactors sym =
 > 	'[ '("LimaSymTable", [sym])
 > 	, '("LimaFocusMain", Maybe Int)
-> 	, '("LimaFocusSelection", [Maybe Int]) ]
+> 	, '("LimaFocusSelection", [Int]) ]
 
 
 
@@ -657,6 +661,116 @@ From the top:
 > confLimaFocusHdl :: ([sym], Maybe Int) -> LimaFocusHdl sym ([sym], Maybe Int)
 > confLimaFocusHdl = uncurry LimaFocusHdl
 > 	. (confLimaIndHdl &&& confLimaFocusSymHdl)
+
+
+
+> liftCoBFLimaList ::
+> 	proxy term
+> 	-> ( d -> (BFLimaList_InTy term a -> (BFLimaList_OutTy term a, b)) )
+> 	-> d -> RO BFLimaList_InTy' BFLimaList_OutTy' a b term
+> liftCoBFLimaList = liftRO (\(BFLimaList_InTy' a) -> a) BFLimaList_OutTy'
+
+> coFLimaInsertSymIntuitive :: FocusedLima sym -> ( sym -> FocusedLima sym )
+> coFLimaDeleteSymIntuitive :: FocusedLima sym -> FocusedLima sym
+
+> coFLimaInsertSymIntuitive ( FocusedLima (Field syms :& Field Nothing :& RNil) ) s
+> 	= FocusedLima $ Field (s:syms) :& Field (Just 0) :& RNil
+> coFLimaInsertSymIntuitive ( FocusedLima (Field syms :& Field (Just mai) :& RNil) ) s
+> 	= FocusedLima
+> 		$ Field (insertAt (1+mai) s syms)
+> 		:& Field (Just $ (succBoundedBy . (1+) $ length syms) mai) :& RNil
+
+> coFLimaDeleteSymIntuitive state@( FocusedLima (_ :& Field Nothing :& RNil) )
+> 	= state
+> coFLimaDeleteSymIntuitive ( FocusedLima (Field syms :& Field (Just mai) :& RNil) )
+> 	= let
+> 		mami' = case (compare mai 0) of
+> 			GT -> Just (predAsNat mai)
+> 			LT -> error "Main focus index was negative."
+> 			EQ -> Nothing
+> 	in FocusedLima $ Field (mami' `seq` deleteAt mai syms) :& Field mami' :& RNil
+
+> coBFLimaInsertSymIntuitive :: BifocusedLima sym -> ( sym -> BifocusedLima sym )
+> coBFLimaDeleteSymIntuitive :: BifocusedLima sym -> BifocusedLima sym
+
+> coBFLimaInsertSymIntuitive
+> 	( BifocusedLima rs@(Field syms :& Field mami :& pkmiF :& RNil) ) s
+> 	= overBFLimaAsFLima (flip coFLimaInsertSymIntuitive s)
+> 	$ BifocusedLima $ rput ((fieldMap . fmap) (pkmiT mami) pkmiF) rs
+> 	where
+> 		pkmiT Nothing x = ($x) $ succBoundedBy . (1+) $ length syms
+> 		pkmiT (Just mai) x = if (mai > x) then x else pkmiT Nothing x
+
+> coBFLimaDeleteSymIntuitive state@( BifocusedLima (_ :& Field Nothing :& _) )
+> 	= state
+> coBFLimaDeleteSymIntuitive
+> 	( BifocusedLima rs@(_ :& Field (Just mai) :& pkmiF :& RNil) )
+> 	= overBFLimaAsFLima coFLimaDeleteSymIntuitive
+> 	$ BifocusedLima $ rput ((fieldMap . (=<<)) pkmiT pkmiF) rs
+> 	where
+> 		pkmiT x = case (compare x mai) of
+> 			GT -> Just (predAsNat x)
+> 			LT -> Just x
+> 			EQ -> Nothing
+
+> coSelLimaInsertSymIntuitive :: SelectingLima sym -> ( sym -> SelectingLima sym )
+> coSelLimaDeleteSymIntuitive :: SelectingLima sym -> SelectingLima sym
+
+> coSelLimaInsertSymIntuitive
+> 	( SelectingLima rs@(Field syms :& Field mami :& pkmiF :& RNil) ) s
+> 	= overSelLimaAsFLima (flip coFLimaInsertSymIntuitive s)
+> 	$ SelectingLima $ rput ((fieldMap . fmap) (pkmiT mami) pkmiF) rs
+> 	where
+> 		pkmiT Nothing x = ($x) $ succBoundedBy . (1+) $ length syms
+> 		pkmiT (Just mai) x = if (mai > x) then x else pkmiT Nothing x
+
+> coSelLimaDeleteSymIntuitive state@( SelectingLima (_ :& Field Nothing :& _) )
+> 	= state
+> coSelLimaDeleteSymIntuitive
+> 	( SelectingLima rs@(_ :& Field (Just mai) :& pkmiF :& RNil) )
+> 	= overSelLimaAsFLima coFLimaDeleteSymIntuitive
+> 	$ SelectingLima $ rput ((fieldMap . mapMaybe) pkmiT pkmiF) rs
+> 	where
+> 		pkmiT x = case (compare x mai) of
+> 			GT -> Just (predAsNat x)
+> 			LT -> Just x
+> 			EQ -> Nothing
+
+> coFLimaInsertSym :: FocusedLima sym -> ( sym -> ((), FocusedLima sym) )
+> coFLimaDeleteSym :: FocusedLima sym -> ( () -> ((), FocusedLima sym) )
+
+> coFLimaInsertSym = fmap ((),) . coFLimaInsertSymIntuitive
+> coFLimaDeleteSym = const . ((),) . coFLimaDeleteSymIntuitive
+
+> coBFLimaInsertSym :: BifocusedLima sym -> ( sym -> ((), BifocusedLima sym) )
+> coBFLimaDeleteSym :: BifocusedLima sym -> ( () -> ((), BifocusedLima sym) )
+
+> coBFLimaInsertSym = fmap ((),) . coBFLimaInsertSymIntuitive
+> coBFLimaDeleteSym = const . ((),) . coBFLimaDeleteSymIntuitive
+
+> coSelLimaInsertSym :: SelectingLima sym -> ( sym -> ((), SelectingLima sym) )
+> coSelLimaDeleteSym :: SelectingLima sym -> ( () -> ((), SelectingLima sym) )
+
+> coSelLimaInsertSym = fmap ((),) . coSelLimaInsertSymIntuitive
+> coSelLimaDeleteSym = const . ((),) . coSelLimaDeleteSymIntuitive
+
+> confFLimaListHdl :: FocusedLima sym -> BFLimaListHdl sym (FocusedLima sym)
+> confFLimaListHdl a = BFLimaListHdl . Hdl
+> 	$ liftCoBFLimaList (Proxy :: Proxy 'BFLimaInsertSym) coFLimaInsertSym a
+> 	:& liftCoBFLimaList (Proxy :: Proxy 'BFLimaDeleteSym) coFLimaDeleteSym a
+> 	:& RNil
+
+> confBFLimaListHdl :: BifocusedLima sym -> BFLimaListHdl sym (BifocusedLima sym)
+> confBFLimaListHdl a = BFLimaListHdl . Hdl
+> 	$ liftCoBFLimaList (Proxy :: Proxy 'BFLimaInsertSym) coBFLimaInsertSym a
+> 	:& liftCoBFLimaList (Proxy :: Proxy 'BFLimaDeleteSym) coBFLimaDeleteSym a
+> 	:& RNil
+
+> confSelLimaListHdl :: SelectingLima sym -> BFLimaListHdl sym (SelectingLima sym)
+> confSelLimaListHdl a = BFLimaListHdl . Hdl
+> 	$ liftCoBFLimaList (Proxy :: Proxy 'BFLimaInsertSym) coSelLimaInsertSym a
+> 	:& liftCoBFLimaList (Proxy :: Proxy 'BFLimaDeleteSym) coSelLimaDeleteSym a
+> 	:& RNil
 
 
 
