@@ -818,6 +818,28 @@ From the top:
 * Type
 * Default configuration
 
+-----
+
+
+
+> type BFLimaInterp a k = Cofree (BFLimaHdl a) k
+
+
+
+> blankFLima :: FocusedLima sym
+> blankFLima = FocusedLima $ Field [] :& Field Nothing :& RNil
+
+> blankBFLima :: BifocusedLima sym
+> blankBFLima = BifocusedLima $ Field [] :& Field Nothing :& Field Nothing :& RNil
+
+> blankSelLima :: SelectingLima sym
+> blankSelLima = SelectingLima $ Field [] :& Field Nothing :& Field [] :& RNil
+
+
+
+> blankBFLimaInterp :: BFLimaInterp sym (BifocusedLima sym)
+> blankBFLimaInterp = coiter confBFLimaHdl blankBFLima
+
 
 
 == DSL expressions ==
