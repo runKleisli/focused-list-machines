@@ -1040,16 +1040,8 @@ language is undocumented.
 
 
 
-== Pairings between outputs and states ==
-
-* Library
-* Examples
-
-
-
 == Pairings between programs and states ==
 
-* Library
 * Examples
 * Extended program inventory
 
