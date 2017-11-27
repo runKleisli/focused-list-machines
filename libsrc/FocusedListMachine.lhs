@@ -24,9 +24,7 @@ In here, we use corecords for the programs, and records for the interpreters.
 
 > import Data.Vinyl
 > import Data.Vinyl.CoRec
-> import Data.Vinyl.Functor
 > import Data.Proxy
-> import Data.Functor.Product
 
 Notation
 
