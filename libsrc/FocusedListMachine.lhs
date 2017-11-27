@@ -161,6 +161,24 @@ commands as transitions of different machines as subrecord updates.
 
 
 
+=== Measuring ===
+
+> getSymTableSize :: forall sym rs proxy. ( '("LimaSymTable", [sym]) ∈ rs )
+> 	=> proxy sym -> FieldRec rs -> Int
+> getSymTableSize _ =
+> 	length . getField . rget (Proxy :: Proxy '("LimaSymTable", [sym]))
+
+> getListPartSize_flima :: forall sym. FocusedLima sym -> Int
+> getListPartSize_flima (FocusedLima xs) = getSymTableSize (Proxy :: Proxy sym) xs
+
+> getListPartSize_bf :: forall sym. BifocusedLima sym -> Int
+> getListPartSize_bf (BifocusedLima xs) = getSymTableSize (Proxy :: Proxy sym) xs
+
+> getListPartSize_sellima :: forall sym. SelectingLima sym -> Int
+> getListPartSize_sellima (SelectingLima xs) = getSymTableSize (Proxy :: Proxy sym) xs
+
+
+
 == Categories of atomic terms ==
 
 * Clean up bit on pairings below.
