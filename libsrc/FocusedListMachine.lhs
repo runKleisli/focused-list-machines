@@ -90,12 +90,15 @@ commands as transitions of different machines as subrecord updates.
 
 > newtype FocusedLima sym
 > 	= FocusedLima (FieldRec (FocusedLimaStateFactors sym))
+> 	deriving (Show)
 
 > newtype BifocusedLima sym
 > 	= BifocusedLima (FieldRec (BifocusedLimaStateFactors sym))
+> 	deriving (Show)
 
 > newtype SelectingLima sym
 > 	= SelectingLima (FieldRec (SelectingLimaStateFactors sym))
+> 	deriving (Show)
 
 > instance Functor FocusedLima where
 > 	fmap f ( FocusedLima (x :& xs) ) = FocusedLima
