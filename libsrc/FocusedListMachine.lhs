@@ -49,9 +49,81 @@ Notation
 
 == Machines ==
 
-* Focused, bifocused, field lists, record types
 * Benefits of trying to implement a couple actions directly before proceeding
 ** Exercizes with holes
+
+-----
+
+
+
+Use of records here has nothing to do with use for DSLs and interpreters.
+The goal of using Vinyl over plain records here is to reuse code for handling
+commands as transitions of different machines as subrecord updates.
+
+
+
+> type LimaStateFactors sym =
+> 	'[ '("LimaSymTable", [sym])
+> 	, '("LimaFocusMain", Maybe Int)
+> 	, '("LimaFocusPicked", Maybe Int)
+> 	, '("LimaFocusSelection", [Maybe Int]) ]
+
+> type FocusedLimaStateFactors sym =
+> 	'[ '("LimaSymTable", [sym])
+> 	, '("LimaFocusMain", Maybe Int) ]
+
+> type BifocusedLimaStateFactors sym =
+> 	'[ '("LimaSymTable", [sym])
+> 	, '("LimaFocusMain", Maybe Int)
+> 	, '("LimaFocusPicked", Maybe Int) ]
+
+> type SelectingLimaStateFactors sym =
+> 	'[ '("LimaSymTable", [sym])
+> 	, '("LimaFocusMain", Maybe Int)
+> 	, '("LimaFocusSelection", [Maybe Int]) ]
+
+
+
+> newtype FocusedLima sym
+> 	= FocusedLima (FieldRec (FocusedLimaStateFactors sym))
+
+> newtype BifocusedLima sym
+> 	= BifocusedLima (FieldRec (BifocusedLimaStateFactors sym))
+
+> newtype SelectingLima sym
+> 	= SelectingLima (FieldRec (SelectingLimaStateFactors sym))
+
+> instance Functor FocusedLima where
+> 	fmap f ( FocusedLima (x :& xs) ) = FocusedLima
+> 		$ fieldMap (fmap f) x :& rmap id xs
+
+> overBFLimaAsFLima ::
+> 	( FocusedLima a -> FocusedLima b )
+> 	-> BifocusedLima a -> BifocusedLima b
+> overBFLimaAsFLima f ( BifocusedLima xs ) = BifocusedLima
+> 	 	$ {- Over newtype wrapper ~ over it as a FocusedLima -}
+> 		( ( (\(FocusedLima a) -> a) . ) . (. FocusedLima) )
+> 			f
+> 			(rcast xs)
+> 		{- And leave the rest as it is -}
+> 	 	<+> rmap id (rcast xs)
+
+> instance Functor BifocusedLima where
+> 	fmap f = overBFLimaAsFLima (fmap f)
+
+> overSelLimaAsFLima ::
+> 	( FocusedLima a -> FocusedLima b )
+> 	-> SelectingLima a -> SelectingLima b
+> overSelLimaAsFLima f ( SelectingLima xs ) = SelectingLima
+> 	 	$ {- Over newtype wrapper ~ over it as a FocusedLima -}
+> 		( ( (\(FocusedLima a) -> a) . ) . (. FocusedLima) )
+> 			f
+> 			(rcast xs)
+> 		{- And leave the rest as it is -}
+> 	 	<+> rmap id (rcast xs)
+
+> instance Functor SelectingLima where
+> 	fmap f = overSelLimaAsFLima (fmap f)
 
 
 
