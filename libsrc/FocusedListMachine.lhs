@@ -74,7 +74,18 @@ Notation
 
 === Setting, inserting, & deleting on the symbol table ===
 
-* Library, specs
+* Underlying BFLima library, specs
+
+-----
+
+> insertAt :: Int -> sym -> [sym] -> [sym]
+> insertAt i x = uncurry (++) . fmap (x:) . splitAt i
+
+> replaceAt :: Int -> sym -> [sym] -> [sym]
+> replaceAt i x = uncurry (++) . fmap ((x:) . tail) . splitAt i
+
+> deleteAt :: Int -> [sym] -> [sym]
+> deleteAt i = uncurry (++) . fmap tail . splitAt i
 
 
 
