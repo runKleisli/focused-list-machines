@@ -1,6 +1,8 @@
-== Focused List Machines ==
+Focused List Machines
+======
 
-=== About ===
+About
+------
 
 The DSL-interpreter pairing as a concept is a division of labor and typing of components to a language ecosystem that allows one to generate different parts of the ecosystem or their typing from one another. It is an application of adjunctions, which is what it sounds like, but in a not so obvious way, and is a mathematical duality.
 
@@ -13,7 +15,7 @@ Zippers are out of the scope of this project.
 References on the topic of the DSL-interpreter pairing:
 
 * [D. Laing, "Cofun" series](http://dlaing.org/cofun/)
-** Mainly, D. Laing, "Free for DSLs, cofree for interpreters"
+  * Mainly, D. Laing, "Free for DSLs, cofree for interpreters"
 * [D. Piponi, "Cofree meets free"](http://blog.sigfpe.com/2014/05/cofree-meets-free.html)
 * [G. Gonzalez, Comonads are objects](http://www.haskellforall.com/2013/02/you-could-have-invented-comonads.html)
 * [P. Freeman, "Comonads as spaces"](http://blog.functorial.com/posts/2016-08-07-Comonads-As-Spaces.html)
@@ -22,7 +24,8 @@ References on the topic of the DSL-interpreter pairing:
 
 
 
-=== The DSL-interpreter pairing through the Vinyl lens ===
+The DSL-interpreter pairing through the Vinyl lens
+------
 
 The existence of the DSL-interpreter pairing means that once one type is determined, so is the other, that implementing both comes down to filling out values for opposite sides of the system, and that there is a way of extending
 
@@ -137,7 +140,8 @@ This should be automated, if the goal of using Vinyl here is automating the typi
 
 
 
-=== The list machines (Limas) ===
+The list machines (Limas)
+------
 
 Three machines are presented:
 
@@ -165,7 +169,8 @@ At present, `BFLimaPrgm` is the only programming language fully supported. So en
 
 
 
-=== Things tried & repo structure ===
+Things tried & repo structure
+------
 
 The development branch for the current version is `cmd-lvl-recsublang-sections-termless-parents`.
 
@@ -181,14 +186,15 @@ So I suppose the benefit to this approach right now is in having a directed proc
 
 
 
-=== Development goals ===
+Development goals
+------
 
 * (ported) Documentation
 * (ported, meagre) Testing
 * Modularization
 * Generated boilerplate? Template Haskell? Abandon all hope?
 * Parsing text off console
-** Pairing over the network type stuff
+  * Pairing over the network type stuff
 * Full languages for the other machines
 * Reduction to minimal languages of `BifocusedLima` & `SelectingLima` of a language w/ copypaste & fixed binary operations, with different interpreters for the Selecting List Machine (SelectingLima, SelLima*) based on whether the selection is to be kept sorted.
 * Hyperfocus - a focused list of focuses!
