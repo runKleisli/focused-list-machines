@@ -7,7 +7,7 @@ license:             OtherLicense
 license-file:        LICENSE.txt
 author:              Rand Kleisli
 maintainer:          runKleisli@openmailbox.org
-category:            DSL
+category:            DSL, Interpreter
 build-type:          Simple
 extra-source-files:  README.md
 cabal-version:       >=1.10
@@ -16,6 +16,7 @@ library
   exposed-modules:
     FocusedListMachine
     Data.Functor.Pairing
+    Language.DSLInterpreterPairing
   build-depends:
     base > 4.5 && < 5,
     free,
