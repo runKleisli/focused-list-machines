@@ -2,6 +2,9 @@ name:                focused-list-machines
 version:             0.0.0
 synopsis:            Languages for index-centric manipulation of lists
 description:         Various state machines maintaining a list and operated through Domain Specific Languages that let the user build and edit the list in terms of focuses. Commands include moving the focus, inserting and deleting entries relative to the focus, setting the contents of the focal entry to a supplied value, and things like that.
+homepage:            https://github.com/runKleisli/focused-list-machines
+license:             OtherLicense
+license-file:        LICENSE.txt
 author:              Rand Kleisli
 maintainer:          runKleisli@openmailbox.org
 category:            DSL
@@ -12,11 +15,12 @@ cabal-version:       >=1.10
 library
   exposed-modules:
     FocusedListMachine
+    Data.Functor.Pairing
   build-depends:
     base > 4.5 && < 5,
-    base,
     free,
     comonad,
+    adjunctions,
     vinyl >= 0.6
   hs-source-dirs: libsrc
   ghc-options: -Wall -Wno-tabs
@@ -33,5 +37,6 @@ executable Example
     base > 4.5 && < 5,
     free,
     comonad,
+    adjunctions,
     vinyl >= 0.6
   default-language: Haskell2010
