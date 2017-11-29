@@ -18,7 +18,6 @@ References on the topic of the DSL-interpreter pairing:
   * Mainly, D. Laing, "Free for DSLs, cofree for interpreters"
 * [D. Piponi, "Cofree meets free"](http://blog.sigfpe.com/2014/05/cofree-meets-free.html)
 * [G. Gonzalez, Comonads are objects](http://www.haskellforall.com/2013/02/you-could-have-invented-comonads.html)
-* [P. Freeman, "Comonads as spaces"](http://blog.functorial.com/posts/2016-08-07-Comonads-As-Spaces.html)
 
 ...and other nice articles less directly relevant to this project's actual code.
 
