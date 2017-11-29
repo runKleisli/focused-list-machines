@@ -10,6 +10,16 @@ As this is a port of a project originally done without Vinyl co/records, the doc
 
 Zippers are out of the scope of this project.
 
+References on the topic of the DSL-interpreter pairing:
+
+* [D. Laing, "Cofun" series](http://dlaing.org/cofun/)
+** Mainly, D. Laing, "Free for DSLs, cofree for interpreters"
+* [D. Piponi, "Cofree meets free"](http://blog.sigfpe.com/2014/05/cofree-meets-free.html)
+* [G. Gonzalez, Comonads are objects](http://www.haskellforall.com/2013/02/you-could-have-invented-comonads.html)
+* [P. Freeman, "Comonads as spaces"](http://blog.functorial.com/posts/2016-08-07-Comonads-As-Spaces.html)
+
+...and other nice articles less directly relevant to this project's actual code.
+
 
 
 === The DSL-interpreter pairing through the Vinyl lens ===
