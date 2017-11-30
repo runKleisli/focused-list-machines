@@ -188,8 +188,8 @@ So I suppose the benefit to this approach right now is in having a directed proc
 Development goals
 ------
 
-* (ported) Documentation
-* (ported, meagre) Testing
+* (ported) Documentation, specs
+* More tests
 * Modularization
 * Generated boilerplate? Template Haskell? Abandon all hope?
 * Parsing text off console
